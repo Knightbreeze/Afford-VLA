@@ -13,6 +13,7 @@ IMAGE_KEYS = (
     "left_wrist_0_rgb",
     "right_wrist_0_rgb",
 )
+AFF_INPUT_IMAGE_KEY = ("base_0_rgb",)
 
 IMAGE_RESOLUTION = (224, 224)
 
@@ -23,6 +24,7 @@ def preprocess_observation_pytorch(
     train: bool = False,
     image_keys: Sequence[str] = IMAGE_KEYS,
     image_resolution: tuple[int, int] = IMAGE_RESOLUTION,
+    save_original: bool = False,
 ):
     """Torch.compile-compatible version of preprocess_observation_pytorch with simplified type annotations.
 
@@ -34,8 +36,12 @@ def preprocess_observation_pytorch(
     batch_shape = observation.state.shape[:-1]
 
     out_images = {}
+    original_images = {} # 第三视角
     for key in image_keys:
         image = observation.images[key]
+        
+        if save_original and key in AFF_INPUT_IMAGE_KEY:
+            original_images[key] = image.clone()
 
         # TODO: This is a hack to handle both [B, C, H, W] and [B, H, W, C] formats
         # Handle both [B, C, H, W] and [B, H, W, C] formats
@@ -164,6 +170,7 @@ def preprocess_observation_pytorch(
 
     return SimpleProcessedObservation(
         images=out_images,
+        original_images=original_images if save_original else None,
         image_masks=out_masks,
         state=observation.state,
         tokenized_prompt=observation.tokenized_prompt,

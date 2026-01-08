@@ -4,3 +4,6 @@
 [submodule "third_party/libero"]
 	path = third_party/libero
 	url = https://github.com/Lifelong-Robot-Learning/LIBERO.git
+[submodule "src/sam3"]
+	path = src/sam3
+	url = https://github.com/facebookresearch/sam3.git

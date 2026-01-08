@@ -41,9 +41,7 @@ import tqdm
 import wandb
 
 import openpi.models.pi0_config
-from openpi.models_pytorch import pi0_pytorch, pi0_aff_pytorch, projectors
-from src.sam3.sam3.model_builder import build_sam3_image_model
-from src.sam3.sam3.model.sam3_image_processor_aff_memory import Sam3AffProcessor
+import openpi.models_pytorch.pi0_pytorch
 import openpi.shared.normalize as _normalize
 import openpi.training.config as _config
 import openpi.training.data_loader as _data
@@ -126,7 +124,6 @@ def set_seed(seed: int, local_rank: int):
 
 def build_datasets(config: _config.TrainConfig):
     # Use the unified data loader with PyTorch framework
-    # 创建数据加载器对象
     data_loader = _data.create_data_loader(config, framework="pytorch", shuffle=True)
     return data_loader, data_loader.data_config()
 
@@ -149,7 +146,7 @@ def get_model_parameters(model):
     )
 
 
-def save_checkpoint(model, align_projector, optimizer, global_step, config, is_main, data_config):
+def save_checkpoint(model, optimizer, global_step, config, is_main, data_config):
     """Save a checkpoint with model state, optimizer state, and metadata."""
     if not is_main:
         return
@@ -168,11 +165,7 @@ def save_checkpoint(model, align_projector, optimizer, global_step, config, is_m
         # Save model state using safetensors (handle shared tensors)
         model_to_save = model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model
         safetensors.torch.save_model(model_to_save, tmp_ckpt_dir / "model.safetensors")
-        
-        # 额外保存 align_projector
-        projector_to_save = align_projector.module if isinstance(align_projector, torch.nn.parallel.DistributedDataParallel) else align_projector
-        safetensors.torch.save_model(projector_to_save, tmp_ckpt_dir / "align_projector.safetensors")
-        
+
         # Save optimizer state using PyTorch format
         torch.save(optimizer.state_dict(), tmp_ckpt_dir / "optimizer.pt")
 
@@ -201,7 +194,7 @@ def save_checkpoint(model, align_projector, optimizer, global_step, config, is_m
             wandb.log({"checkpoint_step": global_step}, step=global_step)
 
 
-def load_checkpoint(model, align_projector, optimizer, checkpoint_dir, device):
+def load_checkpoint(model, optimizer, checkpoint_dir, device):
     """Load the latest checkpoint and return the global step."""
     checkpoint_steps = [
         int(d.name)
@@ -224,23 +217,14 @@ def load_checkpoint(model, align_projector, optimizer, checkpoint_dir, device):
     try:
         # Load model state with error handling
         logging.info("Loading model state...")
-        
-        # Resume from safetensors format
         safetensors_path = ckpt_dir / "model.safetensors"
+
         if safetensors_path.exists():
             model_to_load = model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model
             safetensors.torch.load_model(model_to_load, safetensors_path, device=str(device))
             logging.info("Loaded model state from safetensors format")
         else:
             raise FileNotFoundError(f"No model checkpoint found at {ckpt_dir}")
-
-        # 加载 align_projector
-        projector_path = ckpt_dir / "align_projector.safetensors"
-        if projector_path.exists():
-            projector_to_load = align_projector.module if isinstance(align_projector, torch.nn.parallel.DistributedDataParallel) else align_projector
-            safetensors.torch.load_model(projector_to_load, projector_path, device=str(device))
-        else:
-            raise FileNotFoundError(f"No align_projector checkpoint found at {ckpt_dir}")
 
         torch.cuda.empty_cache()
         gc.collect()
@@ -422,26 +406,7 @@ def train_loop(config: _config.TrainConfig):
         # Update dtype to match pytorch_training_precision
         object.__setattr__(model_cfg, "dtype", config.pytorch_training_precision)
 
-    #  affordance encoder
-    aff_model = build_sam3_image_model(mode="affordance").to(device)
-
-    # Sam3AffProcessor
-    aff_processor = Sam3AffProcessor(
-        model=aff_model,
-        resolution=getattr(config, "aff_resolution", 1008),
-        device=device,
-        confidence_threshold=0.5
-    )
-    logging.info(f"Initialized Sam3AffProcessor with resolution {getattr(config, 'aff_resolution', 1008)}")
-
-    # alignment projector
-    align_projector = projectors.MLPAlignProjector(
-        model.LLM_width,
-        config.aff_dim,
-        config.use_vlm_norm
-    ).to(device)
-
-    model = openpi.models_pytorch.pi0_aff_pytorch.PI0Pytorch(model_cfg, config).to(device)
+    model = openpi.models_pytorch.pi0_pytorch.PI0Pytorch(model_cfg).to(device)
 
     if hasattr(model, "gradient_checkpointing_enable"):
         enable_gradient_checkpointing = True
@@ -450,17 +415,6 @@ def train_loop(config: _config.TrainConfig):
     else:
         enable_gradient_checkpointing = False
         logging.info("Gradient checkpointing is not supported for this model")
-
-    if hasattr(aff_model, "gradient_checkpointing_enable"):
-        aff_model.gradient_checkpointing_enable()
-    else:
-        logging.info("Gradient checkpointing is not supported for affordance model")
-
-    if hasattr(align_projector, "gradient_checkpointing_enable"):
-        align_projector.gradient_checkpointing_enable()
-    else:
-        logging.info("Gradient checkpointing is not supported for align projector")
-    
 
     # Log initial memory usage after model creation
     if is_main and torch.cuda.is_available():
@@ -475,7 +429,6 @@ def train_loop(config: _config.TrainConfig):
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128,expandable_segments:True"
         logging.info("Enabled memory optimizations for 8+ GPU training")
 
-
     if use_ddp:
         model = torch.nn.parallel.DistributedDataParallel(
             model,
@@ -484,17 +437,11 @@ def train_loop(config: _config.TrainConfig):
             gradient_as_bucket_view=True,  # Enable for memory efficiency
             static_graph=world_size >= 8,  # Enable for 8+ GPUs
         )
-        align_projector = torch.nn.parallel.DistributedDataParallel(
-            align_projector,
-            device_ids=[device.index] if device.type == "cuda" else None,
-            find_unused_parameters=False,
-            gradient_as_bucket_view=True,
-            static_graph=world_size >= 8,
-        )
 
     # Load weights from weight_loader if specified (for fine-tuning)
     if config.pytorch_weight_path is not None:
         logging.info(f"Loading weights from: {config.pytorch_weight_path}")
+
         model_path = os.path.join(config.pytorch_weight_path, "model.safetensors")
         safetensors.torch.load_model(
             (model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model), model_path
@@ -509,7 +456,7 @@ def train_loop(config: _config.TrainConfig):
 
     # Create optimizer with config parameters
     optim = torch.optim.AdamW(
-        list(model.parameters()) + list(align_projector.parameters()),
+        model.parameters(),
         lr=peak_lr,
         betas=(config.optimizer.b1, config.optimizer.b2),
         eps=config.optimizer.eps,
@@ -519,13 +466,13 @@ def train_loop(config: _config.TrainConfig):
     # Load checkpoint if resuming
     global_step = 0
     if resuming:
-        global_step = load_checkpoint(model, align_projector, optim, config.checkpoint_dir, device)
+        global_step = load_checkpoint(model, optim, config.checkpoint_dir, device)
         logging.info(f"Resumed training from step {global_step}")
 
     def lr_schedule(step: int):
         if step < warmup_steps:
             # Match JAX behavior: start from peak_lr / (warmup_steps + 1)
-            init_lr = peak_lr / (warmup_steps + 1)                                                                                                                             
+            init_lr = peak_lr / (warmup_steps + 1)
             return init_lr + (peak_lr - init_lr) * step / warmup_steps
         # cosine decay
         progress = min(1.0, (step - warmup_steps) / max(1, decay_steps - warmup_steps))
@@ -533,9 +480,6 @@ def train_loop(config: _config.TrainConfig):
         return end_lr + (peak_lr - end_lr) * cos
 
     model.train()
-    align_projector.train()
-    aff_model.eval()
-
     start_time = time.time()
     infos = []  # Collect stats over log interval
     if is_main:
@@ -554,8 +498,7 @@ def train_loop(config: _config.TrainConfig):
         )
         logging.info("EMA is not supported for PyTorch training")
         logging.info(f"Training precision: {model_cfg.dtype}")
-    
-    
+
     # Training loop - iterate until we reach num_train_steps
     pbar = (
         tqdm.tqdm(total=config.num_train_steps, initial=global_step, desc="Training", disable=not is_main)
@@ -567,25 +510,14 @@ def train_loop(config: _config.TrainConfig):
         # Set epoch for distributed training
         if use_ddp and hasattr(loader, "set_epoch"):
             loader.set_epoch(global_step // len(loader))
-        
-        # 每次迭代时，加载数据
-        # 1. DataLoader 从磁盘读取一个 batch 的样本索引
-        # 2. 调用 dataset.__getitem__(index) 加载数据
-        # 3. 调用 _collate_fn 组装 batch
-        # 4. 返回 (observation, actions)
-        for result in loader: 
 
+        for observation, actions in loader:
             # Check if we've reached the target number of steps
             if global_step >= config.num_train_steps:
                 break
 
-            if isinstance(result, tuple) and len(result) == 3:
-                observation, actions, aff_prompts = result
-            else:
-                observation, actions = result
-                aff_prompts = None
-            
-            observation = jax.tree.map(lambda x: x.to(device), observation)
+            # The unified data loader returns (observation, actions) tuple
+            observation = jax.tree.map(lambda x: x.to(device), observation)  # noqa: PLW2901
             actions = actions.to(torch.float32)  # noqa: PLW2901
             actions = actions.to(device)  # noqa: PLW2901
 
@@ -594,22 +526,14 @@ def train_loop(config: _config.TrainConfig):
                 pg["lr"] = lr_schedule(global_step)
 
             # Forward pass
-            action_losses, align_loss = model(
-                observation, 
-                actions,
-                aff_prompts,
-                aff_processor=aff_processor,
-                align_proj=align_projector
-            )
-            
+            losses = model(observation, actions)
             # Ensure losses is a tensor and handle different return types
-            if isinstance(action_losses, list | tuple):
-                action_losses = torch.stack(action_losses)
-            elif not isinstance(action_losses, torch.Tensor):
-                action_losses = torch.tensor(action_losses, device=device, dtype=torch.float32)
+            if isinstance(losses, list | tuple):
+                losses = torch.stack(losses)
+            elif not isinstance(losses, torch.Tensor):
+                losses = torch.tensor(losses, device=device, dtype=torch.float32)
 
-            action_losses = action_losses.mean()
-            loss = action_losses + config.align_loss_coeff * align_loss
+            loss = losses.mean()
 
             # Backward pass
             loss.backward()
@@ -636,8 +560,6 @@ def train_loop(config: _config.TrainConfig):
                 infos.append(
                     {
                         "loss": loss.item(),
-                        "action_loss": action_losses.item(),
-                        "align_loss": align_loss.item(),
                         "learning_rate": optim.param_groups[0]["lr"],
                         "grad_norm": float(grad_norm) if isinstance(grad_norm, torch.Tensor) else grad_norm,
                     }
@@ -647,8 +569,6 @@ def train_loop(config: _config.TrainConfig):
                 elapsed = time.time() - start_time
 
                 # Average stats over log interval
-                avg_action_loss = sum(info["action_loss"] for info in infos) / len(infos)
-                avg_align_loss = sum(info["align_loss"] for info in infos) / len(infos)
                 avg_loss = sum(info["loss"] for info in infos) / len(infos)
                 avg_lr = sum(info["learning_rate"] for info in infos) / len(infos)
 
@@ -660,7 +580,7 @@ def train_loop(config: _config.TrainConfig):
                     if len(vals) > 0:
                         avg_grad_norm = sum(vals) / len(vals)
                 logging.info(
-                    f"step={global_step} action_loss={avg_action_loss:.4f} align_loss={avg_align_loss:.4f} loss={avg_loss:.4f} lr={avg_lr:.2e} grad_norm={avg_grad_norm:.2f} time={elapsed:.1f}s"
+                    f"step={global_step} loss={avg_loss:.4f} lr={avg_lr:.2e} grad_norm={avg_grad_norm:.2f} time={elapsed:.1f}s"
                     if avg_grad_norm is not None
                     else f"step={global_step} loss={avg_loss:.4f} lr={avg_lr:.2e} time={elapsed:.1f}s"
                 )
@@ -668,8 +588,6 @@ def train_loop(config: _config.TrainConfig):
                 # Log to wandb
                 if config.wandb_enabled and len(infos) > 0:
                     log_payload = {
-                        "action_loss": avg_action_loss,
-                        "align_loss": avg_align_loss,
                         "loss": avg_loss,
                         "learning_rate": avg_lr,
                         "step": global_step,
@@ -684,13 +602,13 @@ def train_loop(config: _config.TrainConfig):
 
             global_step += 1
             # Save checkpoint using the new mechanism
-            save_checkpoint(model, align_projector, optim, global_step, config, is_main, data_config)
+            save_checkpoint(model, optim, global_step, config, is_main, data_config)
 
             # Update progress bar
             if pbar is not None:
                 pbar.update(1)
                 pbar.set_postfix(
-                    {"action_loss": f"{action_losses.item():.4f}", "align_loss": f"{align_loss.item():.4f}","loss": f"{loss.item():.4f}", "lr": f"{optim.param_groups[0]['lr']:.2e}", "step": global_step}
+                    {"loss": f"{loss.item():.4f}", "lr": f"{optim.param_groups[0]['lr']:.2e}", "step": global_step}
                 )
 
     # Close progress bar

@@ -20,7 +20,6 @@ import openpi.models.tokenizer as _tokenizer
 import openpi.policies.aloha_policy as aloha_policy
 import openpi.policies.droid_policy as droid_policy
 import openpi.policies.libero_policy as libero_policy
-import openpi.policies.robotwin_policy as robotwin_policy
 import openpi.shared.download as _download
 import openpi.shared.normalize as _normalize
 import openpi.training.droid_rlds_dataset as droid_rlds_dataset
@@ -453,144 +452,6 @@ class LeRobotDROIDDataConfig(DataConfigFactory):
             model_transforms=model_transforms,
         )
 
-@dataclasses.dataclass(frozen=True)
-class LeRobotMyDataConfig(DataConfigFactory):
-
-    extra_delta_transform: bool = False
-
-    @override
-    def create(self, assets_dirs: pathlib.Path, model_config: _model.BaseModelConfig) -> DataConfig:
-        # The repack transform is *only* applied to the data coming from the dataset,
-        # and *not* during inference. We can use it to make inputs from the dataset look
-        # as close as possible to those coming from the inference environment (e.g. match the keys).
-        # Below, we match the keys in the dataset (which we defined in the data conversion script) to
-        # the keys we use in our inference pipeline (defined in the inference script for libero).
-        # For your own dataset, first figure out what keys your environment passes to the policy server
-        # and then modify the mappings below so your dataset's keys get matched to those target keys.
-        # The repack transform simply remaps key names here.
-
-        # repack_transform 仅应用于来自数据集的数据，而不应用于推理过程中。我们可以使用它使数据集中的输入看起来尽可能接近推理环境（例如匹配键）。下面，我们将数据集中的键（我们在数据转换脚本中定义的）与我们在推理管道中使用的键（在libero的推理脚本中定义的）进行匹配。对于您自己的数据集，首先找出您的环境传递给策略服务器的键，然后修改下面的映射，以便将您的数据集的键与这些目标键匹配。repack_transform 在此处简单地重新映射键名称。
-        repack_transform = _transforms.Group(
-            inputs=[
-                _transforms.RepackTransform(
-                    {
-                        "rgb_left": "rgb_left",
-                        "rgb_right": "rgb_right",
-                        "rgb_global": "rgb_global",
-
-                        "observation.state": "observation.state",
-                        "actions": "action",
-                        "prompt": "task",
-                        "aff_prompt": "aff_prompt",
-                    }
-                )
-            ]
-        )
-
-        # The data transforms are applied to the data coming from the dataset *and* during inference.
-        # Below, we define the transforms for data going into the model (``inputs``) and the transforms
-        # for data coming out of the model (``outputs``) (the latter is only used during inference).
-        # We defined these transforms in `libero_policy.py`. You can check the detailed comments there for
-        # how to modify the transforms to match your dataset. Once you created your own transforms, you can
-        # replace the transforms below with your own.
-
-        # data_transforms在数据来自数据集和推理过程中都应用。下面，我们定义了进入模型的数据（“Inputs”）的变换和来自模型的数据（“Outputs”）的变换（后者仅在推理期间使用）。 我们在`libero_policy.py`中定义了这些变换。您可以在那里查看详细的注释，以了解如何修改这些变换以匹配您的数据集。一旦您创建了自己的变换，您就可以用自己的变换替换下面的变换。
-
-        data_transforms = _transforms.Group(
-            inputs=[libero_policy.LiberoInputs(model_type=model_config.model_type)],
-            outputs=[libero_policy.LiberoOutputs()],
-        )
-
-        # One additional data transform: pi0 models are trained on delta actions (relative to the first
-        # state in each action chunk). IF your data has ``absolute`` actions (e.g. target joint angles)
-        # you can uncomment the following line to convert the actions to delta actions. The only exception
-        # is for the gripper actions which are always absolute.
-        # In the example below, we would apply the delta conversion to the first 6 actions (joints) and
-        # leave the 7th action (gripper) unchanged, i.e. absolute.
-        # In Libero, the raw actions in the dataset are already delta actions, so we *do not* need to
-        # apply a separate delta conversion (that's why it's commented out). Choose whether to apply this
-        # transform based on whether your dataset uses ``absolute`` or ``delta`` actions out of the box.
-
-        # 翻译：一个额外的 data transform：pi0模型是在增量动作（相对于每个动作块中的第一个状态）上训练的。如果您的数据具有“绝对”动作（例如目标关节角度），您可以取消注释以下行以将动作转换为增量动作。唯一的例外是夹爪动作，它们始终是绝对的。在下面的示例中，我们将对前6个动作（关节）应用增量转换，并保持第7个动作（夹爪）不变，即绝对值。在Libero中，数据集中的原始动作已经是增量动作，因此我们不需要应用单独的增量转换（这就是为什么它被注释掉了）。根据您的数据集是使用“绝对”还是“增量”动作来选择是否应用此变换。
-
-        # LIBERO already represents actions as deltas, but we have some old Pi0 checkpoints that are trained with this
-        # extra delta transform.
-
-        # LIBERO已经将动作表示为增量，但我们有一些旧的Pi0检查点是通过这种额外的增量变换训练的。
-
-        if self.extra_delta_transform:
-            delta_action_mask = _transforms.make_bool_mask(6, -1)
-            data_transforms = data_transforms.push(
-                inputs=[_transforms.DeltaActions(delta_action_mask)],
-                outputs=[_transforms.AbsoluteActions(delta_action_mask)],
-            )
-
-        # Model transforms include things like tokenizing the prompt and action targets
-        # You do not need to change anything here for your own dataset.
-        # 模型变换包括诸如标记化提示和动作目标之类的内容。对于您自己的数据集，您无需在此处更改任何内容。
-        model_transforms = ModelTransformFactory()(model_config)
-
-        # We return all data transforms for training and inference. No need to change anything here.
-        # 我们返回用于训练和推理的所有数据变换。这里不需要更改任何内容。
-        return dataclasses.replace(
-            self.create_base_config(assets_dirs, model_config),
-            repack_transforms=repack_transform,
-            data_transforms=data_transforms,
-            model_transforms=model_transforms,
-        )
-
-    
-@dataclasses.dataclass(frozen=True)
-class LeRobotRobotwinDataConfig(DataConfigFactory):
-    # If true, will convert joint dimensions to deltas with respect to the current state before passing to the model.
-    # Gripper dimensions will remain in absolute values.
-    use_delta_joint_actions: bool = True
-    # If provided, will be injected into the input data if the "prompt" key is not present.
-    default_prompt: str | None = None
-
-    # Repack transforms.
-    repack_transforms: tyro.conf.Suppress[_transforms.Group] = dataclasses.field(
-        default=_transforms.Group(
-            inputs=[
-                _transforms.RepackTransform(
-                    {
-                        "observation.state": "observation.state",
-                        "rgb_left": "rgb_left",
-                        "rgb_right": "rgb_right",
-                        "rgb_global": "rgb_global",
-                        "actions": "action",
-                        "prompt": "task",
-                        "aff_prompt": "aff_prompt",
-                    }
-                )
-            ]
-        )
-    )
-    # Action keys that will be used to read the action sequence from the dataset.
-    action_sequence_keys: Sequence[str] = ("action",)
-
-    @override
-    def create(self, assets_dirs: pathlib.Path, model_config: _model.BaseModelConfig) -> DataConfig:
-        data_transforms = _transforms.Group(
-            inputs=[robotwin_policy.RobotwinInputs(model_type=model_config.model_type)],
-            outputs=[robotwin_policy.RobotwinOutputs()],
-        )
-        if self.use_delta_joint_actions:
-            delta_action_mask = _transforms.make_bool_mask(6, -1, 6, -1)
-            data_transforms = data_transforms.push(
-                inputs=[_transforms.DeltaActions(delta_action_mask)],
-                outputs=[_transforms.AbsoluteActions(delta_action_mask)],
-            )
-
-        model_transforms = ModelTransformFactory(default_prompt=self.default_prompt)(model_config)
-
-        return dataclasses.replace(
-            self.create_base_config(assets_dirs, model_config),
-            repack_transforms=self.repack_transforms,
-            data_transforms=data_transforms,
-            model_transforms=model_transforms,
-            action_sequence_keys=self.action_sequence_keys,
-        )
 
 @dataclasses.dataclass(frozen=True)
 class TrainConfig:
@@ -612,22 +473,6 @@ class TrainConfig:
     # Optional path to a PyTorch checkpoint to load weights from.
     pytorch_weight_path: str | None = None
 
-    # affordance configs
-    # aff_weight_path: str | None = None
-    aff_dim: int = 256
-
-    vla_layers_align: int | None = None  # total 18 for paligemma-2b
-    aff_layers_align: int | None = None  # total 6 for aff_funsion_encoder
-
-    aff_input_image_key : list[str] | None = None
-
-    pooling_func: str | None = None
-    use_aff_pe: bool | None = None
-    use_vlm_norm: bool | None = None
-
-    align_loss_coeff: float = 0.5
-      
-    
     # Precision for PyTorch training.
     pytorch_training_precision: Literal["bfloat16", "float32"] = "bfloat16"
 
@@ -704,128 +549,6 @@ class TrainConfig:
 
 # Use `get_config` if you need to get a config by name in your code.
 _CONFIGS = [
-    # ======================================
-    #             Personal Tasks
-    # ======================================
-    TrainConfig(
-        # config name
-        name="pi05_aff_robotwin_debug",
-        # model config
-        model=pi0_config.Pi0Config(pi05=True, action_horizon=10, discrete_state_input=False),
-        # data config
-        data=LeRobotRobotwinDataConfig(
-            repo_id="/home/nightbreeze/research/Data/robotwin/lerobotV2.1_data/place_bread_skillet-aloha-agilex_clean_50",
-            # root="/home/nightbreeze/research/Data/libero/lerobotV2.1_data/libero_debug",
-            base_config=DataConfig(prompt_from_task=True),
-            use_delta_joint_actions=False,
-        ),
-        # optimization configs
-        lr_schedule=_optimizer.CosineDecaySchedule(
-            warmup_steps=10_000,
-            peak_lr=5e-5,
-            decay_steps=1_000_000,
-            decay_lr=5e-5,
-        ),
-        optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
-
-        # weight loader
-        weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
-        pytorch_weight_path="/home/nightbreeze/research/ckpt/pi05_base_pytorch",
-
-        # affordance configs 
-        aff_input_image_key=["base_0_rgb"],
-        vla_layers_align=12,
-        aff_layers_align=-1,
-        pooling_func='bilinear',
-        use_aff_pe=True,
-        use_vlm_norm=True,
-        align_loss_coeff=0.5,
-
-        # training configs
-        batch_size=2,
-        num_train_steps=30_000,
-        ema_decay=0.999,
-        wandb_enabled=False,
-    ),
-    TrainConfig(
-        # config name
-        name="pi05_aff_libero_debug",
-        # model config
-        model=pi0_config.Pi0Config(pi05=True, action_horizon=10, discrete_state_input=False),
-        # data config
-        data=LeRobotLiberoDataConfig(
-            repo_id="/home/nightbreeze/research/Data/libero/lerobotV2.1_data/libero_debug",
-            # root="/home/nightbreeze/research/Data/libero/lerobotV2.1_data/libero_debug",
-            base_config=DataConfig(prompt_from_task=True),
-            extra_delta_transform=False,
-        ),
-        # optimization configs
-        lr_schedule=_optimizer.CosineDecaySchedule(
-            warmup_steps=10_000,
-            peak_lr=5e-5,
-            decay_steps=1_000_000,
-            decay_lr=5e-5,
-        ),
-        optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
-
-        # weight loader
-        weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
-        pytorch_weight_path="/home/nightbreeze/research/ckpt/pi05_base_pytorch",
-
-        # affordance configs 
-        aff_input_image_key=["base_0_rgb"],
-        vla_layers_align=12,
-        aff_layers_align=-1,
-        pooling_func='bilinear',
-        use_aff_pe=True,
-        use_vlm_norm=True,
-        align_loss_coeff=0.5,
-
-        # training configs
-        batch_size=2,
-        num_train_steps=30_000,
-        ema_decay=0.999,
-        wandb_enabled=False,
-    ),
-
-    TrainConfig(
-        name="pi0_align_aloha_place_block",  # <config_name>
-        model=pi0_config.Pi0Config(),
-        data=LeRobotAlohaDataConfig(
-            repo_id="cobot_dataset/place_one_floor_block",  # your datasets repo_id, like "<org>/<dataset-name>"
-            default_prompt="place the green block",
-            repack_transforms=_transforms.Group(
-                inputs=[
-                    _transforms.RepackTransform(
-                        {
-                            "images": {
-                                "cam_high": "observation.images.cam_high",
-                                "cam_left_wrist": "observation.images.cam_left_wrist",
-                                "cam_right_wrist": "observation.images.cam_right_wrist",
-                            },
-                            "state": "observation.state",
-                            "actions": "action",
-                        }
-                    )
-                ]
-            ),
-        ),
-        weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi0_base/params"),
-        pytorch_weight_path='./checkpoints/pi0_base_full_torch',
-        #
-        aff_input_image_key=["base_0_rgb"],
-        vla_layers_align=12,
-        aff_layers_align=-1,
-        pooling_func='bilinear',
-        use_aff_pe=True,
-        use_vlm_norm=True,
-        align_loss_coeff=0.5,
-        #
-        num_train_steps=20_000,
-        batch_size=16,
-        ema_decay=None,
-        wandb_enabled=False,
-    ),
     #
     # Inference Aloha configs.
     #
@@ -1026,7 +749,7 @@ _CONFIGS = [
         optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
         ema_decay=0.999,
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
-        pytorch_weight_path="/home/nightbreeze/research/ckpt/pi05_base_pytorch",
+        pytorch_weight_path="/path/to/your/pytorch_weight_path",
         num_train_steps=30_000,
     ),
     #

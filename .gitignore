@@ -1,3 +1,11 @@
+# 忽略第三方库目录
+third_party/
+
+# 忽略 sam3 的大文件和临时目录
+src/sam3/assets/
+src/sam3/input/
+src/sam3/output/
+
 # Data directories.
 assets/
 checkpoints/

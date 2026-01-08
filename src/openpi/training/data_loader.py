@@ -15,6 +15,7 @@ import openpi.models.model as _model
 import openpi.training.config as _config
 from openpi.training.droid_rlds_dataset import DroidRldsDataset
 import openpi.transforms as _transforms
+from openpi.training.aff_lerobot_dataset import AffLeRobotDataset
 
 T_co = TypeVar("T_co", covariant=True)
 
@@ -126,7 +127,7 @@ class FakeDataset(Dataset):
     def __len__(self) -> int:
         return self._num_samples
 
-
+# 建立数据连接
 def create_torch_dataset(
     data_config: _config.DataConfig, action_horizon: int, model_config: _model.BaseModelConfig
 ) -> Dataset:
@@ -137,13 +138,21 @@ def create_torch_dataset(
     if repo_id == "fake":
         return FakeDataset(model_config, num_samples=1024)
 
+    # 创建 LeRobotDataset 对象
     dataset_meta = lerobot_dataset.LeRobotDatasetMetadata(repo_id)
-    dataset = lerobot_dataset.LeRobotDataset(
+    dataset = AffLeRobotDataset(
         data_config.repo_id,
         delta_timestamps={
             key: [t / dataset_meta.fps for t in range(action_horizon)] for key in data_config.action_sequence_keys
         },
+        video_backend="pyav"
     )
+    # dataset = lerobot_dataset.LeRobotDataset(
+    #     data_config.repo_id,
+    #     delta_timestamps={
+    #         key: [t / dataset_meta.fps for t in range(action_horizon)] for key in data_config.action_sequence_keys
+    #     },
+    # )
 
     if data_config.prompt_from_task:
         dataset = TransformedDataset(dataset, [_transforms.PromptFromLeRobotTask(dataset_meta.tasks)])
@@ -299,12 +308,16 @@ def create_torch_data_loader(
             execute in the main process.
         seed: The seed to use for shuffling the data.
     """
+    # 1: 创建原始数据集对象
     dataset = create_torch_dataset(data_config, action_horizon, model_config)
+    # 2. 包装数据集对象，添加数据变换
     dataset = transform_dataset(dataset, data_config, skip_norm_stats=skip_norm_stats)
 
     # Use TorchDataLoader for both frameworks
     # For PyTorch DDP, create DistributedSampler and divide batch size by world size
     # For JAX, divide by process count
+
+    # 3: 处理分布式训练的数据样本
     sampler = None
     if framework == "pytorch":
         if torch.distributed.is_initialized():
@@ -322,6 +335,7 @@ def create_torch_data_loader(
         local_batch_size = batch_size // jax.process_count()
 
     logging.info(f"local_batch_size: {local_batch_size}")
+    # 4. 创建 TorchDataLoader 包装器
     data_loader = TorchDataLoader(
         dataset,
         local_batch_size=local_batch_size,
@@ -377,6 +391,28 @@ def create_rlds_data_loader(
 
     return DataLoaderImpl(data_config, data_loader)
 
+def _collate_fn(items):
+    """Collate the batch elements into batched numpy arrays."""
+
+    aff_prompts = []
+    tensor_items = []
+    
+    for item in items:
+        if 'aff_prompt' in item:
+            aff_prompts.append(item['aff_prompt'])
+            # 创建不包含 aff_prompt 的副本
+            tensor_item = {k: v for k, v in item.items() if k != 'aff_prompt'}
+            tensor_items.append(tensor_item)
+        else:
+            tensor_items.append(item)
+
+    batch = jax.tree.map(lambda *xs: np.stack([np.asarray(x) for x in xs], axis=0), *tensor_items)
+    
+
+    if aff_prompts:
+        batch['aff_prompt'] = aff_prompts 
+    
+    return batch
 
 class TorchDataLoader:
     """Torch data loader implementation."""
@@ -457,22 +493,60 @@ class TorchDataLoader:
                 if self._num_batches is not None and num_items >= self._num_batches:
                     return
                 try:
-                    batch = next(data_iter)
+                    result = next(data_iter)
                 except StopIteration:
                     break  # We've exhausted the dataset. Create a new iterator and start over.
                 num_items += 1
+                
+                if isinstance(result, tuple):
+                    batch, aff_prompts = result
+                else:
+                    batch = result
+                    aff_prompts = None
+                
                 # For JAX, convert to sharded arrays; for PyTorch, return torch tensors
                 if self._sharding is not None:
-                    yield jax.tree.map(lambda x: jax.make_array_from_process_local_data(self._sharding, x), batch)
+                    tensor_batch = jax.tree.map(
+                        lambda x: jax.make_array_from_process_local_data(self._sharding, x), 
+                        batch
+                    )
                 else:
-                    yield jax.tree.map(torch.as_tensor, batch)
+                    tensor_batch = jax.tree.map(torch.as_tensor, batch)
+                
+                # ✅ 如果有 aff_prompts，一起返回
+                if aff_prompts is not None:
+                    yield tensor_batch, aff_prompts
+                else:
+                    yield tensor_batch
 
 
 def _collate_fn(items):
     """Collate the batch elements into batched numpy arrays."""
     # Make sure to convert to numpy arrays before stacking since some of the incoming elements
     # may be JAX arrays.
-    return jax.tree.map(lambda *xs: np.stack([np.asarray(x) for x in xs], axis=0), *items)
+
+    aff_prompts = []
+    tensor_items = []
+    
+    for item in items:
+        # 提取 aff_prompt
+        if 'aff_prompt' in item:
+            aff_prompts.append(item['aff_prompt'])
+            # 创建不包含 aff_prompt 的副本
+            tensor_item = {k: v for k, v in item.items() if k != 'aff_prompt'}
+        else:
+            tensor_item = item
+        tensor_items.append(tensor_item)
+    
+    # 对 tensor 数据进行正常的 collate
+    batch = jax.tree.map(lambda *xs: np.stack([np.asarray(x) for x in xs], axis=0), *tensor_items)
+    
+    # ✅ 如果有 aff_prompt，作为额外的元数据返回
+    # 但不放在 batch 字典中，因为它会干扰 from_dict
+    if aff_prompts:
+        return batch, aff_prompts
+    else:
+        return batch, None
 
 
 def _worker_init_fn(worker_id: int) -> None:
@@ -536,5 +610,18 @@ class DataLoaderImpl(DataLoader):
         return self._data_config
 
     def __iter__(self):
-        for batch in self._data_loader:
-            yield _model.Observation.from_dict(batch), batch["actions"]
+        for result in self._data_loader:
+
+            if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], list):
+                batch, aff_prompts = result
+            else:
+                batch = result
+                aff_prompts = None
+            
+            observation = _model.Observation.from_dict(batch)
+            actions = batch["actions"]
+            
+            if aff_prompts is not None:
+                yield observation, actions, aff_prompts
+            else:
+                yield observation, actions
