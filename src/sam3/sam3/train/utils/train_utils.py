@@ -1,21 +1,19 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
+from datetime import timedelta
 import logging
 import math
 import os
 import random
 import re
-from datetime import timedelta
-from typing import Optional
 
 import hydra
-
+from iopath.common.file_io import g_pathmgr
 import numpy as np
 import omegaconf
+from omegaconf import OmegaConf
 import torch
 import torch.distributed as dist
-from iopath.common.file_io import g_pathmgr
-from omegaconf import OmegaConf
 
 
 def multiply_all(*args):
@@ -132,14 +130,13 @@ def is_dist_avail_and_initialized():
     return True
 
 
-def get_amp_type(amp_type: Optional[str] = None):
+def get_amp_type(amp_type: str | None = None):
     if amp_type is None:
         return None
     assert amp_type in ["bfloat16", "float16"], "Invalid Amp type."
     if amp_type == "bfloat16":
         return torch.bfloat16
-    else:
-        return torch.float16
+    return torch.float16
 
 
 def log_env_variables():
@@ -206,15 +203,7 @@ class MemMeter:
             torch.cuda.reset_peak_memory_stats()
 
     def __str__(self):
-        fmtstr = (
-            "{name}: {val"
-            + self.fmt
-            + "} ({avg"
-            + self.fmt
-            + "}/{peak"
-            + self.fmt
-            + "})"
-        )
+        fmtstr = "{name}: {val" + self.fmt + "} ({avg" + self.fmt + "}/{peak" + self.fmt + "})"
         return fmtstr.format(**self.__dict__)
 
 
@@ -257,12 +246,7 @@ class ProgressMeter:
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
         entries += [
-            " | ".join(
-                [
-                    f"{os.path.join(name, subname)}: {val:.4f}"
-                    for subname, val in meter.compute().items()
-                ]
-            )
+            " | ".join([f"{os.path.join(name, subname)}: {val:.4f}" for subname, val in meter.compute().items()])
             for name, meter in self.real_meters.items()
         ]
         logging.info(" | ".join(entries))

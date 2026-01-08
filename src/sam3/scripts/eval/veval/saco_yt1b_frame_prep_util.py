@@ -38,32 +38,20 @@ class YtVideoPrep:
         ) = self._get_yt_video_id_map_info()
 
         self.raw_video_dir = os.path.join(self.data_dir, "raw_videos")
-        self.raw_video_path = os.path.join(
-            self.raw_video_dir, f"{self.yt_video_id}.mp4"
-        )
+        self.raw_video_path = os.path.join(self.raw_video_dir, f"{self.yt_video_id}.mp4")
 
-        self.JPEGImages_6fps_dir = os.path.join(
-            self.data_dir, "JPEGImages_6fps", self.saco_yt1b_id
-        )
-        self.JPEGImages_6fps_pattern = os.path.join(
-            self.JPEGImages_6fps_dir, "%05d.jpg"
-        )
+        self.JPEGImages_6fps_dir = os.path.join(self.data_dir, "JPEGImages_6fps", self.saco_yt1b_id)
+        self.JPEGImages_6fps_pattern = os.path.join(self.JPEGImages_6fps_dir, "%05d.jpg")
 
         os.makedirs(self.raw_video_dir, exist_ok=True)
         os.makedirs(self.JPEGImages_6fps_dir, exist_ok=True)
 
     def _get_yt_video_id_map_info(self):
-        df = self.yt1b_start_end_time_df[
-            self.yt1b_start_end_time_df.saco_yt1b_id == self.saco_yt1b_id
-        ]
-        assert (
-            len(df) == 1
-        ), f"Expected exactly 1 row for saco_yt1b_id: {self.saco_yt1b_id}, found {len(df)}"
+        df = self.yt1b_start_end_time_df[self.yt1b_start_end_time_df.saco_yt1b_id == self.saco_yt1b_id]
+        assert len(df) == 1, f"Expected exactly 1 row for saco_yt1b_id: {self.saco_yt1b_id}, found {len(df)}"
         id_and_frame_map_row = df.iloc[0]
 
-        yt_video_id = (
-            id_and_frame_map_row.yt_video_id
-        )  # yt_video_id is like -06NgWyZxC0
+        yt_video_id = id_and_frame_map_row.yt_video_id  # yt_video_id is like -06NgWyZxC0
         yt_video_id_w_timestamps = id_and_frame_map_row.yt_video_id_w_timestamps
         start_time = id_and_frame_map_row.start_time
         end_time = id_and_frame_map_row.end_time
@@ -113,9 +101,7 @@ class YtVideoPrep:
                 ydl.download([video_url])
                 return "success"
         except Exception as e:
-            logger.warning(
-                f"[video download][{self.saco_yt1b_id}] Error downloading video {self.yt_video_id}: {e}"
-            )
+            logger.warning(f"[video download][{self.saco_yt1b_id}] Error downloading video {self.yt_video_id}: {e}")
             return f"error {e}"
 
     def extract_frames_in_6fps_and_width_1080(self):
@@ -123,9 +109,7 @@ class YtVideoPrep:
         Extract target frames in 6fps and width 1080.
         """
         if not os.path.exists(self.raw_video_path):
-            logger.warning(
-                f"[frame extracting][{self.saco_yt1b_id}] Raw video file not found at {self.raw_video_path}"
-            )
+            logger.warning(f"[frame extracting][{self.saco_yt1b_id}] Raw video file not found at {self.raw_video_path}")
             os.rmdir(self.JPEGImages_6fps_dir)
             return False
 
@@ -169,12 +153,11 @@ class YtVideoPrep:
             timeout=self.ffmpeg_timeout,
             capture_output=True,
             text=True,
+            check=False,
         )
 
         if result.returncode != 0:
-            logger.warning(
-                f"[frame extracting][{self.saco_yt1b_id}] Failed to extract raw frames: {result.stderr}"
-            )
+            logger.warning(f"[frame extracting][{self.saco_yt1b_id}] Failed to extract raw frames: {result.stderr}")
             os.rmdir(self.JPEGImages_6fps_dir)
             return False
 
@@ -256,9 +239,7 @@ def main():
     logger.info(f"[video download][{args.saco_yt1b_id}] download status {status}")
 
     status = video_prep.extract_frames_in_6fps_and_width_1080()
-    logger.info(
-        f"[frame extracting][{args.saco_yt1b_id}] frame extracting status {status}"
-    )
+    logger.info(f"[frame extracting][{args.saco_yt1b_id}] frame extracting status {status}")
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ def make_my_example() -> dict:
     return {
         "observation.state": np.random.rand(14),
         "rgb_right": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
-        "rgb_left" : np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
+        "rgb_left": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
         "rgb_global": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
         "prompt": "do something",
     }
@@ -47,7 +47,7 @@ class RobotwinInputs(transforms.DataTransformFn):
 
         if "prompt" in data:
             inputs["prompt"] = data["prompt"]
-        
+
         if "aff_prompt" in data:
             inputs["aff_prompt"] = data["aff_prompt"]
 
@@ -71,11 +71,14 @@ def _parse_image(image) -> np.ndarray:
         image = einops.rearrange(image, "c h w -> h w c")
     return image
 
+
 def _normalize(x, min_val, max_val):
     return (x - min_val) / (max_val - min_val)
 
+
 def _unnormalize(x, min_val, max_val):
     return x * (max_val - min_val) + min_val
+
 
 def _encode_state_my(data: dict) -> dict:
     # state is [left_arm_joint_angles, left_arm_gripper, right_arm_joint_angles, right_arm_gripper]
@@ -86,13 +89,14 @@ def _encode_state_my(data: dict) -> dict:
     # state[[6, 13]] = _normalize(state[[6, 13]], min_val=0, max_val=90)
     # state[[6, 13]] = np.clip(state[[6, 13]], 0.0, 1.0)
 
-    data['rgb_left'] = _parse_image(data['rgb_left'])
-    data['rgb_right'] = _parse_image(data['rgb_right'])
-    data['rgb_global'] = _parse_image(data['rgb_global'])
+    data["rgb_left"] = _parse_image(data["rgb_left"])
+    data["rgb_right"] = _parse_image(data["rgb_right"])
+    data["rgb_global"] = _parse_image(data["rgb_global"])
 
     data["obeservation.state"] = state
-    
+
     return data
+
 
 def _encode_actions_my(actions: np.ndarray) -> np.ndarray:
     actions[:, [6, 13]] = _normalize(actions[:, [6, 13]], min_val=0, max_val=90)
@@ -100,7 +104,8 @@ def _encode_actions_my(actions: np.ndarray) -> np.ndarray:
     actions = np.pad(actions, ((0, 0), (0, 32 - 14)), mode="constant", constant_values=0)
     return actions
 
+
 def _decode_actions_my(actions: np.ndarray) -> np.ndarray:
-    actions[:, [6, 13]] = _unnormalize(actions[:, [6,13]], min_val=0, max_val=90)
+    actions[:, [6, 13]] = _unnormalize(actions[:, [6, 13]], min_val=0, max_val=90)
     actions = actions[:, 0:14]
     return actions

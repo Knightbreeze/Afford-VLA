@@ -1,16 +1,16 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 import argparse
-import os
 from functools import partial
 from multiprocessing import Pool
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import requests
-import utils
 from PIL import Image
+import requests
 from tqdm import tqdm
+import utils
 
 METADATA_FILE = "published_images.csv"
 METADATA_URL = "https://raw.githubusercontent.com/NationalGalleryOfArt/opendata/refs/heads/main/data"  # data/published_iamges.csv from https://github.com/NationalGalleryOfArt/opendata/tree/main
@@ -31,9 +31,7 @@ def download_metadata(annotation_folder):
 
 
 def download_url(row):
-    if np.isnan(row.maxpixels) or (
-        row.maxpixels > row.width and row.maxpixels > row.height
-    ):
+    if np.isnan(row.maxpixels) or (row.maxpixels > row.width and row.maxpixels > row.height):
         url = IMG_URL % (row.uuid, "full")
     else:
         url = IMG_URL % (row.uuid, f"!{row.maxpixels},{row.maxpixels}")
@@ -58,9 +56,9 @@ def download_item(item, output_folder):
 def remove_non_compliant_image(item, output_folder):
     uuid, max_pixels = item
     if np.isnan(max_pixels):
-        return
+        return None
     if not (output_folder / f"{uuid}{EXTENSION}").exists():
-        return
+        return None
     img = Image.open(output_folder / f"{uuid}{EXTENSION}")
     if img.width > max_pixels or img.height > max_pixels:
         os.remove(output_folder / f"{uuid}{EXTENSION}")  # delete image
@@ -91,12 +89,7 @@ def main(args, workers=20):
     metadata["download_url"] = metadata.apply(download_url, axis=1)
     available_uuids = list(uuids.intersection(set(metadata["uuid"].tolist())))
     print(len(available_uuids), "available for download out of", len(uuids), "target")
-    url_data = list(
-        metadata.set_index("uuid")
-        .loc[available_uuids]
-        .to_dict()["download_url"]
-        .items()
-    )
+    url_data = list(metadata.set_index("uuid").loc[available_uuids].to_dict()["download_url"].items())
 
     download_single = partial(download_item, output_folder=(processed_folder))
 
@@ -104,17 +97,13 @@ def main(args, workers=20):
     with Pool(20) as p:
         for _ in tqdm(p.imap(download_single, url_data), total=len(url_data)):
             continue
-    check_img_size = partial(
-        remove_non_compliant_image, output_folder=(processed_folder)
-    )
+    check_img_size = partial(remove_non_compliant_image, output_folder=(processed_folder))
     max_pixels_dict_all = metadata.set_index("uuid").to_dict()["maxpixels"]
     max_pixels_dict = {item[0]: max_pixels_dict_all[item[0]] for item in url_data}
     print("Checking all images within size constraints")
     non_compliant = set()
     with Pool(20) as p:
-        for each in tqdm(
-            p.imap(check_img_size, max_pixels_dict.items()), total=len(max_pixels_dict)
-        ):
+        for each in tqdm(p.imap(check_img_size, max_pixels_dict.items()), total=len(max_pixels_dict)):
             if each is not None:
                 non_compliant.add(each)
     print(len(non_compliant), "not compliant size, removed")

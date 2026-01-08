@@ -4,9 +4,9 @@
 Transforms and data augmentation for both image + bbox.
 """
 
+from collections.abc import Iterable
 import math
 import random
-from typing import Iterable
 
 import PIL
 import torch
@@ -77,28 +77,19 @@ def hflip(image, target):
     target = target.copy()
     if "boxes" in target:
         boxes = target["boxes"]
-        boxes = boxes[:, [2, 1, 0, 3]] * torch.as_tensor(
-            [-1, 1, -1, 1]
-        ) + torch.as_tensor([w, 0, w, 0])
+        boxes = boxes[:, [2, 1, 0, 3]] * torch.as_tensor([-1, 1, -1, 1]) + torch.as_tensor([w, 0, w, 0])
         target["boxes"] = boxes
 
     if "input_boxes" in target:
         boxes = target["input_boxes"]
-        boxes = boxes[:, [2, 1, 0, 3]] * torch.as_tensor(
-            [-1, 1, -1, 1]
-        ) + torch.as_tensor([w, 0, w, 0])
+        boxes = boxes[:, [2, 1, 0, 3]] * torch.as_tensor([-1, 1, -1, 1]) + torch.as_tensor([w, 0, w, 0])
         target["input_boxes"] = boxes
 
     if "masks" in target:
         target["masks"] = target["masks"].flip(-1)
 
     if "text_input" in target:
-        text_input = (
-            target["text_input"]
-            .replace("left", "[TMP]")
-            .replace("right", "left")
-            .replace("[TMP]", "right")
-        )
+        text_input = target["text_input"].replace("left", "[TMP]").replace("right", "left").replace("[TMP]", "right")
         target["text_input"] = text_input
 
     return flipped_image, target
@@ -130,8 +121,7 @@ def resize(image, target, size, max_size=None, square=False):
     def get_size(image_size, size, max_size=None):
         if isinstance(size, (list, tuple)):
             return size[::-1]
-        else:
-            return get_size_with_aspect_ratio(image_size, size, max_size)
+        return get_size_with_aspect_ratio(image_size, size, max_size)
 
     if square:
         size = size, size
@@ -142,9 +132,7 @@ def resize(image, target, size, max_size=None, square=False):
     if target is None:
         return rescaled_image, None
 
-    ratios = tuple(
-        float(s) / float(s_orig) for s, s_orig in zip(rescaled_image.size, image.size)
-    )
+    ratios = tuple(float(s) / float(s_orig) for s, s_orig in zip(rescaled_image.size, image.size))
     ratio_width, ratio_height = ratios
 
     target = target.copy()
@@ -170,10 +158,7 @@ def resize(image, target, size, max_size=None, square=False):
     target["size"] = torch.tensor([h, w])
 
     if "masks" in target:
-        target["masks"] = (
-            interpolate(target["masks"][:, None].float(), size, mode="nearest")[:, 0]
-            > 0.5
-        )
+        target["masks"] = interpolate(target["masks"][:, None].float(), size, mode="nearest")[:, 0] > 0.5
 
     return rescaled_image, target
 
@@ -195,27 +180,19 @@ def pad(image, target, padding):
     target["size"] = torch.tensor([h, w])
     if "boxes" in target and len(padding) == 4:
         boxes = target["boxes"]
-        boxes = boxes + torch.as_tensor(
-            [padding[0], padding[1], padding[0], padding[1]], dtype=torch.float32
-        )
+        boxes = boxes + torch.as_tensor([padding[0], padding[1], padding[0], padding[1]], dtype=torch.float32)
         target["boxes"] = boxes
 
     if "input_boxes" in target and len(padding) == 4:
         boxes = target["input_boxes"]
-        boxes = boxes + torch.as_tensor(
-            [padding[0], padding[1], padding[0], padding[1]], dtype=torch.float32
-        )
+        boxes = boxes + torch.as_tensor([padding[0], padding[1], padding[0], padding[1]], dtype=torch.float32)
         target["input_boxes"] = boxes
 
     if "masks" in target:
         if len(padding) == 2:
-            target["masks"] = torch.nn.functional.pad(
-                target["masks"], (0, padding[0], 0, padding[1])
-            )
+            target["masks"] = torch.nn.functional.pad(target["masks"], (0, padding[0], 0, padding[1]))
         else:
-            target["masks"] = torch.nn.functional.pad(
-                target["masks"], (padding[0], padding[2], padding[1], padding[3])
-            )
+            target["masks"] = torch.nn.functional.pad(target["masks"], (padding[0], padding[2], padding[1], padding[3]))
     return padded_image, target
 
 
@@ -264,28 +241,23 @@ class RandomSizeCrop:
                 # i = random.uniform(max(0, minX - w + 1), max(maxX, max(0, minX - w + 1)))
                 i = random.uniform(max(0, minX - w), max(maxX, max(0, minX - w)))
             else:
-                i = random.uniform(
-                    max(0, minX - w + 1), max(maxX - 1, max(0, minX - w + 1))
-                )
+                i = random.uniform(max(0, minX - w + 1), max(maxX - 1, max(0, minX - w + 1)))
             if minY > maxY:
                 # j = random.uniform(max(0, minY - h + 1), max(maxY, max(0, minY - h + 1)))
                 j = random.uniform(max(0, minY - h), max(maxY, max(0, minY - h)))
             else:
-                j = random.uniform(
-                    max(0, minY - h + 1), max(maxY - 1, max(0, minY - h + 1))
-                )
+                j = random.uniform(max(0, minY - h + 1), max(maxY - 1, max(0, minY - h + 1)))
             result_img, result_target = crop(img, target, [j, i, h, w])
             assert (
                 len(result_target["boxes"]) == init_boxes
             ), f"img_w={img.width}\timg_h={img.height}\tminX={minX}\tminY={minY}\tmaxX={maxX}\tmaxY={maxY}\tminW={minW}\tminH={minH}\tmaxW={maxW}\tmaxH={maxH}\tw={w}\th={h}\ti={i}\tj={j}\tinit_boxes={init_boxes_tensor}\tresults={result_target['boxes']}"
 
             return result_img, result_target
-        else:
-            w = random.randint(self.min_size, min(img.width, self.max_size))
-            h = random.randint(self.min_size, min(img.height, self.max_size))
-            region = T.RandomCrop.get_params(img, (h, w))
-            result_img, result_target = crop(img, target, region)
-            return result_img, result_target
+        w = random.randint(self.min_size, min(img.width, self.max_size))
+        h = random.randint(self.min_size, min(img.height, self.max_size))
+        region = T.RandomCrop.get_params(img, (h, w))
+        result_img, result_target = crop(img, target, region)
+        return result_img, result_target
 
 
 class CenterCrop:
@@ -438,7 +410,7 @@ class Compose:
         format_string = self.__class__.__name__ + "("
         for t in self.transforms:
             format_string += "\n"
-            format_string += "    {0}".format(t)
+            format_string += f"    {t}"
         format_string += "\n)"
         return format_string
 

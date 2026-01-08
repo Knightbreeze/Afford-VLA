@@ -1,18 +1,16 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 import numpy as np
+from PIL import Image as PILImage
 import pycocotools.mask as mask_utils
 import torch
-
 import torchvision.transforms.functional as F
-from PIL import Image as PILImage
 
 from sam3.model.box_ops import masks_to_boxes
-
 from sam3.train.data.sam3_image_dataset import Datapoint
 
 
-class InstanceToSemantic(object):
+class InstanceToSemantic:
     """Convert instance segmentation to semantic segmentation."""
 
     def __init__(self, delete_instance=True, use_rle=False):
@@ -25,8 +23,7 @@ class InstanceToSemantic(object):
 
             if self.use_rle:
                 all_segs = [
-                    datapoint.images[fquery.image_id].objects[obj_id].segment
-                    for obj_id in fquery.object_ids_output
+                    datapoint.images[fquery.image_id].objects[obj_id].segment for obj_id in fquery.object_ids_output
                 ]
                 if len(all_segs) > 0:
                     # we need to double check that all rles are the correct size
@@ -40,9 +37,7 @@ class InstanceToSemantic(object):
                 else:
                     # There is no good way to create an empty RLE of the correct size
                     # We resort to converting an empty box to RLE
-                    fquery.semantic_target = mask_utils.frPyObjects(
-                        np.array([[0, 0, 0, 0]], dtype=np.float64), h, w
-                    )[0]
+                    fquery.semantic_target = mask_utils.frPyObjects(np.array([[0, 0, 0, 0]], dtype=np.float64), h, w)[0]
 
             else:
                 # `semantic_target` is uint8 and remains uint8 throughout the transforms
@@ -51,10 +46,7 @@ class InstanceToSemantic(object):
                 for obj_id in fquery.object_ids_output:
                     segment = datapoint.images[fquery.image_id].objects[obj_id].segment
                     if segment is not None:
-                        assert (
-                            isinstance(segment, torch.Tensor)
-                            and segment.dtype == torch.uint8
-                        )
+                        assert isinstance(segment, torch.Tensor) and segment.dtype == torch.uint8
                         fquery.semantic_target |= segment
 
         if self.delete_instance:
@@ -102,9 +94,7 @@ class DecodeRle:
             imgId2size[imgId] = (img_h, img_w)
 
             for obj in img.objects:
-                if obj.segment is not None and not isinstance(
-                    obj.segment, torch.Tensor
-                ):
+                if obj.segment is not None and not isinstance(obj.segment, torch.Tensor):
                     if mask_utils.area(obj.segment) == 0:
                         print("Warning, empty mask found, approximating from box")
                         obj.segment = torch.zeros(img_h, img_w, dtype=torch.uint8)
@@ -124,22 +114,16 @@ class DecodeRle:
                             # Printing only once per datapoint to avoid spam
                             warning_shown = True
 
-                        obj.segment = F.resize(
-                            obj.segment[None], (img_h, img_w)
-                        ).squeeze(0)
+                        obj.segment = F.resize(obj.segment[None], (img_h, img_w)).squeeze(0)
 
                     assert list(obj.segment.shape) == [img_h, img_w]
 
         warning_shown = False
         for query in datapoint.find_queries:
-            if query.semantic_target is not None and not isinstance(
-                query.semantic_target, torch.Tensor
-            ):
+            if query.semantic_target is not None and not isinstance(query.semantic_target, torch.Tensor):
                 query.semantic_target = mask_utils.decode(query.semantic_target)
                 # segment is uint8 and remains uint8 throughout the transforms
-                query.semantic_target = torch.tensor(query.semantic_target).to(
-                    torch.uint8
-                )
+                query.semantic_target = torch.tensor(query.semantic_target).to(torch.uint8)
                 if tuple(query.semantic_target.shape) != imgId2size[query.image_id]:
                     if not warning_shown:
                         print(
@@ -148,9 +132,7 @@ class DecodeRle:
                         # Printing only once per datapoint to avoid spam
                         warning_shown = True
 
-                    query.semantic_target = F.resize(
-                        query.semantic_target[None], imgId2size[query.image_id]
-                    ).squeeze(0)
+                    query.semantic_target = F.resize(query.semantic_target[None], imgId2size[query.image_id]).squeeze(0)
 
                 assert tuple(query.semantic_target.shape) == imgId2size[query.image_id]
 

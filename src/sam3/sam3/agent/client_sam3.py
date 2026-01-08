@@ -3,8 +3,8 @@
 import json
 import os
 
-import torch
 from PIL import Image
+import torch
 
 from sam3.model.box_ops import box_xyxy_to_xywh
 from sam3.train.masks_ops import rle_encode
@@ -20,9 +20,7 @@ def sam3_inference(processor, image_path, text_prompt):
 
     # model inference
     inference_state = processor.set_image(image)
-    inference_state = processor.set_text_prompt(
-        state=inference_state, prompt=text_prompt
-    )
+    inference_state = processor.set_text_prompt(state=inference_state, prompt=text_prompt)
 
     # format and assemble outputs
     pred_boxes_xyxy = torch.stack(
@@ -59,13 +57,9 @@ def call_sam_service(
     """
     print(f"📞 Loading image '{image_path}' and sending with prompt '{text_prompt}'...")
 
-    text_prompt_for_save_path = (
-        text_prompt.replace("/", "_") if "/" in text_prompt else text_prompt
-    )
+    text_prompt_for_save_path = text_prompt.replace("/", "_") if "/" in text_prompt else text_prompt
 
-    os.makedirs(
-        os.path.join(output_folder_path, image_path.replace("/", "-")), exist_ok=True
-    )
+    os.makedirs(os.path.join(output_folder_path, image_path.replace("/", "-")), exist_ok=True)
     output_json_path = os.path.join(
         output_folder_path,
         image_path.replace("/", "-"),
@@ -90,7 +84,7 @@ def call_sam_service(
         }
 
         # 2. Reorder predictions by scores (highest to lowest) if scores are available
-        if "pred_scores" in serialized_response and serialized_response["pred_scores"]:
+        if serialized_response.get("pred_scores"):
             # Create indices sorted by scores in descending order
             score_indices = sorted(
                 range(len(serialized_response["pred_scores"])),
@@ -99,15 +93,9 @@ def call_sam_service(
             )
 
             # Reorder all three lists based on the sorted indices
-            serialized_response["pred_scores"] = [
-                serialized_response["pred_scores"][i] for i in score_indices
-            ]
-            serialized_response["pred_boxes"] = [
-                serialized_response["pred_boxes"][i] for i in score_indices
-            ]
-            serialized_response["pred_masks"] = [
-                serialized_response["pred_masks"][i] for i in score_indices
-            ]
+            serialized_response["pred_scores"] = [serialized_response["pred_scores"][i] for i in score_indices]
+            serialized_response["pred_boxes"] = [serialized_response["pred_boxes"][i] for i in score_indices]
+            serialized_response["pred_masks"] = [serialized_response["pred_masks"][i] for i in score_indices]
 
         # 3. Remove any invalid RLE masks that is too short (shorter than 5 characters)
         valid_masks = []

@@ -8,33 +8,27 @@ The difference is that there is less copy-pasting from pycocotools
 in the end of the file, as python3 can suppress prints with contextlib
 """
 
+from collections import defaultdict
 import contextlib
 import copy
 import json
 import logging
 import os
-import pickle
-from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
-from typing import Any, List, Optional
-
-import numpy as np
-
-import pycocotools.mask as mask_utils
-import torch
 from iopath.common.file_io import g_pathmgr
+import numpy as np
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
+import pycocotools.mask as mask_utils
+import torch
 
 from sam3.train.masks_ops import rle_encode
-
-from sam3.train.utils.distributed import (
-    all_gather,
-    gather_to_rank_0_via_filesys,
-    get_rank,
-    is_main_process,
-)
+from sam3.train.utils.distributed import all_gather
+from sam3.train.utils.distributed import gather_to_rank_0_via_filesys
+from sam3.train.utils.distributed import get_rank
+from sam3.train.utils.distributed import is_main_process
 
 RARITY_BUCKETS = {0: "frequent", 1: "common", 2: "medium", 3: "rare"}
 
@@ -43,12 +37,12 @@ class CocoEvaluator:
     def __init__(
         self,
         coco_gt,
-        iou_types: List[str],
+        iou_types: list[str],
         useCats: bool,
-        dump_dir: Optional[str],
+        dump_dir: str | None,
         postprocessor,
         average_by_rarity=False,
-        metrics_dump_dir: Optional[str] = None,
+        metrics_dump_dir: str | None = None,
         gather_pred_via_filesys=False,
         use_normalized_areas=True,
         maxdets=[1, 10, 100],
@@ -114,10 +108,7 @@ class CocoEvaluator:
 
         self.initialized = True
 
-        self.coco_gts = [
-            coco_cls(g_pathmgr.get_local_path(gt)) if isinstance(gt, str) else gt
-            for gt in self.coco_gts
-        ]
+        self.coco_gts = [coco_cls(g_pathmgr.get_local_path(gt)) if isinstance(gt, str) else gt for gt in self.coco_gts]
 
         self.reset()
 
@@ -129,11 +120,7 @@ class CocoEvaluator:
             if self.all_exhaustive_only:
                 for coco_gt in self.coco_gts[1:]:
                     exclude_img_ids = exclude_img_ids.union(
-                        {
-                            img["id"]
-                            for img in coco_gt.dataset["images"]
-                            if not img["is_instance_exhaustive"]
-                        }
+                        {img["id"] for img in coco_gt.dataset["images"] if not img["is_instance_exhaustive"]}
                     )
             # we only eval on instance exhaustive queries
             self.eval_img_ids = [
@@ -145,9 +132,7 @@ class CocoEvaluator:
         self.rarity_buckets = None
         if self.average_by_rarity:
             self.rarity_buckets = defaultdict(list)
-            eval_img_ids_set = (
-                set(self.eval_img_ids) if self.eval_img_ids is not None else None
-            )
+            eval_img_ids_set = set(self.eval_img_ids) if self.eval_img_ids is not None else None
             for img in self.coco_gts[0].dataset["images"]:
                 if self.eval_img_ids is not None and img["id"] not in eval_img_ids_set:
                     continue
@@ -182,9 +167,7 @@ class CocoEvaluator:
                 # suppress pycocotools prints
                 with open(os.devnull, "w") as devnull:
                     with contextlib.redirect_stdout(devnull):
-                        coco_dt = (
-                            self._loadRes(cur_coco_gt, results) if results else COCO()
-                        )
+                        coco_dt = self._loadRes(cur_coco_gt, results) if results else COCO()
 
                 coco_eval = cur_coco_eval[iou_type]
 
@@ -252,9 +235,7 @@ class CocoEvaluator:
 
     def accumulate(self, imgIds=None):
         self._lazy_init()
-        logging.info(
-            f"Coco evaluator: Accumulating on {len(imgIds) if imgIds is not None else 'all'} images"
-        )
+        logging.info(f"Coco evaluator: Accumulating on {len(imgIds) if imgIds is not None else 'all'} images")
         if not is_main_process():
             return
 
@@ -273,9 +254,7 @@ class CocoEvaluator:
                 catIds = p.catIds if p.useCats else [-1]
                 coco_eval.evalImgs = list(
                     np.asarray(coco_eval.evalImgs)
-                    .reshape(len(catIds), len(p.areaRng), len(old_img_ids))[
-                        ..., id_mask
-                    ]
+                    .reshape(len(catIds), len(p.areaRng), len(old_img_ids))[..., id_mask]
                     .flatten()
                 )
                 accumulate(coco_eval, use_self_eval=self.use_self_evaluate)
@@ -292,7 +271,7 @@ class CocoEvaluator:
         if self.rarity_buckets is None:
             self.accumulate(self.eval_img_ids)
             for iou_type, coco_eval in self.coco_evals[0].items():
-                print("IoU metric: {}".format(iou_type))
+                print(f"IoU metric: {iou_type}")
                 summarize(coco_eval)
 
             if "bbox" in self.coco_evals[0]:
@@ -313,18 +292,14 @@ class CocoEvaluator:
 
                 if "bbox" in self.coco_evals[0]:
                     if "bbox" not in total_stats:
-                        total_stats["bbox"] = np.zeros_like(
-                            self.coco_evals[0]["bbox"].stats[1]
-                        )
+                        total_stats["bbox"] = np.zeros_like(self.coco_evals[0]["bbox"].stats[1])
                         all_keys["bbox"] = self.coco_evals[0]["bbox"].stats[0]
                     total_stats["bbox"] += self.coco_evals[0]["bbox"].stats[1]
                     for key, value in zip(*self.coco_evals[0]["bbox"].stats):
                         outs[f"coco_eval_bbox_{bucket_name}_{key}"] = value
                 if "segm" in self.coco_evals[0]:
                     if "segm" not in total_stats:
-                        total_stats["segm"] = np.zeros_like(
-                            self.coco_evals[0]["segm"].stats[1]
-                        )
+                        total_stats["segm"] = np.zeros_like(self.coco_evals[0]["segm"].stats[1])
                         all_keys["segm"] = self.coco_evals[0]["segm"].stats[0]
                     total_stats["segm"] += self.coco_evals[0]["segm"].stats[1]
                     for key, value in zip(*self.coco_evals[0]["segm"].stats):
@@ -400,12 +375,11 @@ class CocoEvaluator:
         self._lazy_init()
         if iou_type == "bbox":
             return self.prepare_for_coco_detection(predictions)
-        elif iou_type == "segm":
+        if iou_type == "segm":
             return self.prepare_for_coco_segmentation(predictions)
-        elif iou_type == "keypoints":
+        if iou_type == "keypoints":
             return self.prepare_for_coco_keypoint(predictions)
-        else:
-            raise ValueError("Unknown iou type {}".format(iou_type))
+        raise ValueError(f"Unknown iou type {iou_type}")
 
     def prepare_for_coco_detection(self, predictions):
         self._lazy_init()
@@ -564,9 +538,7 @@ def create_common_coco_eval(
     if not is_main_process():
         return
     if metrics_dump_dir is not None:
-        dumped_file = (
-            Path(metrics_dump_dir) / f"coco_eval_img_metrics_{get_rank()}.json"
-        )
+        dumped_file = Path(metrics_dump_dir) / f"coco_eval_img_metrics_{get_rank()}.json"
         logging.info(f"COCO evaluator: Dumping local predictions to {dumped_file}")
         with g_pathmgr.open(str(dumped_file), "w") as f:
             json.dump(eval_imgs.squeeze(), f, default=lambda x: x.tolist())
@@ -604,12 +576,8 @@ def segmentation_prepare(self):
     """
     p = self.params
     if p.useCats:
-        gts = self.cocoGt.loadAnns(
-            self.cocoGt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds)
-        )
-        dts = self.cocoDt.loadAnns(
-            self.cocoDt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds)
-        )
+        gts = self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
+        dts = self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
     else:
         gts = self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds))
         dts = self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds))
@@ -640,9 +608,7 @@ def evaluate(self, use_self_evaluate):
     # add backward compatibility if useSegm is specified in params
     if p.useSegm is not None:
         p.iouType = "segm" if p.useSegm == 1 else "bbox"
-        print(
-            "useSegm (deprecated) is not None. Running {} evaluation".format(p.iouType)
-        )
+        print(f"useSegm (deprecated) is not None. Running {p.iouType} evaluation")
     # print('Evaluate annotation type *{}*'.format(p.iouType))
     p.imgIds = list(np.unique(p.imgIds))
     if p.useCats:
@@ -658,11 +624,7 @@ def evaluate(self, use_self_evaluate):
         computeIoU = self.computeIoU
     elif p.iouType == "keypoints":
         computeIoU = self.computeOks
-    self.ious = {
-        (imgId, catId): computeIoU(imgId, catId)
-        for imgId in p.imgIds
-        for catId in catIds
-    }
+    self.ious = {(imgId, catId): computeIoU(imgId, catId) for imgId in p.imgIds for catId in catIds}
 
     maxDet = p.maxDets[-1]
     if use_self_evaluate:
@@ -673,9 +635,7 @@ def evaluate(self, use_self_evaluate):
             for imgId in p.imgIds
         ]
         # this is NOT in the pycocotools code, but could be done outside
-        evalImgs = np.asarray(evalImgs).reshape(
-            len(catIds), len(p.areaRng), len(p.imgIds)
-        )
+        evalImgs = np.asarray(evalImgs).reshape(len(catIds), len(p.areaRng), len(p.imgIds))
         return p.imgIds, evalImgs
 
     # <<<< Beginning of code differences with original COCO API
@@ -753,19 +713,13 @@ def loadRes(self, resFile):
         anns = resFile
     assert type(anns) == list, "results in not an array of objects"
     annsImgIds = [ann["image_id"] for ann in anns]
-    assert set(annsImgIds) == (
-        set(annsImgIds) & set(self.getImgIds())
-    ), "Results do not correspond to current coco set"
+    assert set(annsImgIds) == (set(annsImgIds) & set(self.getImgIds())), "Results do not correspond to current coco set"
     if "caption" in anns[0]:
-        imgIds = set([img["id"] for img in res.dataset["images"]]) & set(
-            [ann["image_id"] for ann in anns]
-        )
-        res.dataset["images"] = [
-            img for img in res.dataset["images"] if img["id"] in imgIds
-        ]
+        imgIds = set([img["id"] for img in res.dataset["images"]]) & set([ann["image_id"] for ann in anns])
+        res.dataset["images"] = [img for img in res.dataset["images"] if img["id"] in imgIds]
         for id, ann in enumerate(anns):
             ann["id"] = id + 1
-    elif "bbox" in anns[0] and not anns[0]["bbox"] == []:
+    elif "bbox" in anns[0] and anns[0]["bbox"] != []:
         res.dataset["categories"] = copy.deepcopy(self.dataset["categories"])
         for id, ann in enumerate(anns):
             bb = ann["bbox"]
@@ -820,11 +774,7 @@ def summarize(self):
         iStr = " {:<18} {} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}"
         titleStr = "Average Precision" if ap == 1 else "Average Recall"
         typeStr = "(AP)" if ap == 1 else "(AR)"
-        iouStr = (
-            "{:0.2f}:{:0.2f}".format(p.iouThrs[0], p.iouThrs[-1])
-            if iouThr is None
-            else "{:0.2f}".format(iouThr)
-        )
+        iouStr = f"{p.iouThrs[0]:0.2f}:{p.iouThrs[-1]:0.2f}" if iouThr is None else f"{iouThr:0.2f}"
 
         aind = [i for i, aRng in enumerate(p.areaRngLbl) if aRng == areaRng]
         mind = [i for i, mDet in enumerate(p.maxDets) if mDet == maxDets]

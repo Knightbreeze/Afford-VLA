@@ -95,9 +95,7 @@ class _BaseDataset(ABC):
 
         # Calculate similarities for each timestep.
         similarity_scores = []
-        for t, (gt_dets_t, tracker_dets_t) in enumerate(
-            zip(raw_data["gt_dets"], raw_data["tracker_dets"])
-        ):
+        for t, (gt_dets_t, tracker_dets_t) in enumerate(zip(raw_data["gt_dets"], raw_data["tracker_dets"])):
             ious = self._calculate_similarities(gt_dets_t, tracker_dets_t)
             similarity_scores.append(ious)
         raw_data["similarity_scores"] = similarity_scores
@@ -148,9 +146,7 @@ class _BaseDataset(ABC):
         """
 
         if remove_negative_ids and id_col is None:
-            raise TrackEvalException(
-                "remove_negative_ids is True, but id_col is not given."
-            )
+            raise TrackEvalException("remove_negative_ids is True, but id_col is not given.")
         if crowd_ignore_filter is None:
             crowd_ignore_filter = {}
         if convert_filter is None:
@@ -158,9 +154,7 @@ class _BaseDataset(ABC):
         try:
             if is_zipped:  # Either open file directly or within a zip.
                 if zip_file is None:
-                    raise TrackEvalException(
-                        "is_zipped set to True, but no zip_file is given."
-                    )
+                    raise TrackEvalException("is_zipped set to True, but no zip_file is given.")
                 archive = zipfile.ZipFile(os.path.join(zip_file), "r")
                 fp = io.TextIOWrapper(archive.open(file, "r"))
             else:
@@ -171,12 +165,8 @@ class _BaseDataset(ABC):
             # check if file is empty
             if fp.tell():
                 fp.seek(0)
-                dialect = csv.Sniffer().sniff(
-                    fp.readline(), delimiters=force_delimiters
-                )  # Auto determine structure.
-                dialect.skipinitialspace = (
-                    True  # Deal with extra spaces between columns
-                )
+                dialect = csv.Sniffer().sniff(fp.readline(), delimiters=force_delimiters)  # Auto determine structure.
+                dialect.skipinitialspace = True  # Deal with extra spaces between columns
                 fp.seek(0)
                 reader = csv.reader(fp, dialect)
                 for row in reader:
@@ -194,18 +184,14 @@ class _BaseDataset(ABC):
                                     convert_key,
                                     convert_value,
                                 ) in convert_filter.items():
-                                    row[convert_key] = convert_value[
-                                        row[convert_key].lower()
-                                    ]
+                                    row[convert_key] = convert_value[row[convert_key].lower()]
                                 # Save data separated by timestep.
                                 if timestep in crowd_ignore_data.keys():
                                     crowd_ignore_data[timestep].append(row)
                                 else:
                                     crowd_ignore_data[timestep] = [row]
                                 is_ignored = True
-                        if (
-                            is_ignored
-                        ):  # if det is an ignore region, it cannot be a normal det.
+                        if is_ignored:  # if det is an ignore region, it cannot be a normal det.
                             continue
                         # Exclude some dets if not valid.
                         if valid_filter is not None:
@@ -224,9 +210,8 @@ class _BaseDataset(ABC):
                         else:
                             read_data[timestep] = [row]
                     except Exception:
-                        exc_str_init = (
-                            "In file %s the following line cannot be read correctly: \n"
-                            % os.path.basename(file)
+                        exc_str_init = "In file %s the following line cannot be read correctly: \n" % os.path.basename(
+                            file
                         )
                         exc_str = " ".join([exc_str_init] + row)
                         raise TrackEvalException(exc_str)
@@ -261,12 +246,8 @@ class _BaseDataset(ABC):
 
         # use pycocotools for run length encoding of masks
         if not is_encoded:
-            masks1 = mask_utils.encode(
-                np.array(np.transpose(masks1, (1, 2, 0)), order="F")
-            )
-            masks2 = mask_utils.encode(
-                np.array(np.transpose(masks2, (1, 2, 0)), order="F")
-            )
+            masks1 = mask_utils.encode(np.array(np.transpose(masks1, (1, 2, 0)), order="F"))
+            masks2 = mask_utils.encode(np.array(np.transpose(masks2, (1, 2, 0)), order="F"))
 
         # use pycocotools for iou computation of rle encoded masks
         ious = mask_utils.iou(masks1, masks2, [do_ioa] * len(masks2))
@@ -299,25 +280,17 @@ class _BaseDataset(ABC):
         # layout: (x0, y0, x1, y1)
         min_ = np.minimum(bboxes1[:, np.newaxis, :], bboxes2[np.newaxis, :, :])
         max_ = np.maximum(bboxes1[:, np.newaxis, :], bboxes2[np.newaxis, :, :])
-        intersection = np.maximum(min_[..., 2] - max_[..., 0], 0) * np.maximum(
-            min_[..., 3] - max_[..., 1], 0
-        )
-        area1 = (bboxes1[..., 2] - bboxes1[..., 0]) * (
-            bboxes1[..., 3] - bboxes1[..., 1]
-        )
+        intersection = np.maximum(min_[..., 2] - max_[..., 0], 0) * np.maximum(min_[..., 3] - max_[..., 1], 0)
+        area1 = (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1])
 
         if do_ioa:
             ioas = np.zeros_like(intersection)
             valid_mask = area1 > 0 + np.finfo("float").eps
-            ioas[valid_mask, :] = (
-                intersection[valid_mask, :] / area1[valid_mask][:, np.newaxis]
-            )
+            ioas[valid_mask, :] = intersection[valid_mask, :] / area1[valid_mask][:, np.newaxis]
 
             return ioas
         else:
-            area2 = (bboxes2[..., 2] - bboxes2[..., 0]) * (
-                bboxes2[..., 3] - bboxes2[..., 1]
-            )
+            area2 = (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1])
             union = area1[:, np.newaxis] + area2[np.newaxis, :] - intersection
             intersection[area1 <= 0 + np.finfo("float").eps, :] = 0
             intersection[:, area2 <= 0 + np.finfo("float").eps] = 0
@@ -351,9 +324,7 @@ class _BaseDataset(ABC):
                         "Tracker predicts the same ID more than once in a single timestep "
                         "(seq: %s, frame: %i, ids:" % (data["seq"], t + 1)
                     )
-                    exc_str = (
-                        " ".join([exc_str_init] + [str(d) for d in duplicate_ids]) + ")"
-                    )
+                    exc_str = " ".join([exc_str_init] + [str(d) for d in duplicate_ids]) + ")"
                     if after_preproc:
                         exc_str_init += (
                             "\n Note that this error occurred after preprocessing (but not before), "
@@ -368,9 +339,7 @@ class _BaseDataset(ABC):
                         "Ground-truth has the same ID more than once in a single timestep "
                         "(seq: %s, frame: %i, ids:" % (data["seq"], t + 1)
                     )
-                    exc_str = (
-                        " ".join([exc_str_init] + [str(d) for d in duplicate_ids]) + ")"
-                    )
+                    exc_str = " ".join([exc_str_init] + [str(d) for d in duplicate_ids]) + ")"
                     if after_preproc:
                         exc_str_init += (
                             "\n Note that this error occurred after preprocessing (but not before), "

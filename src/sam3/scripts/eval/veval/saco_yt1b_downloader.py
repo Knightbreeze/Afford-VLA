@@ -1,10 +1,9 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 import argparse
+from functools import partial
 import logging
-
 import multiprocessing as mp
 import os
-from functools import partial
 
 import pandas as pd
 from saco_yt1b_frame_prep_util import YtVideoPrep
@@ -28,9 +27,7 @@ def download_and_extract_frames(saco_yt1b_id, args):
     logger.info(f"[video download][{saco_yt1b_id}] download status {status}")
 
     if status not in ["already exists", "success"]:
-        logger.warning(
-            f"Video download failed for {saco_yt1b_id}, skipping frame generation"
-        )
+        logger.warning(f"Video download failed for {saco_yt1b_id}, skipping frame generation")
         return False
 
     status = video_prep.extract_frames_in_6fps_and_width_1080()
@@ -109,7 +106,7 @@ def main():
 
     args = parser.parse_args()
 
-    with open(args.yt1b_start_end_time_file, "r") as f:
+    with open(args.yt1b_start_end_time_file) as f:
         yt1b_start_end_time_df = pd.read_json(f)
 
     saco_yt1b_ids = yt1b_start_end_time_df.saco_yt1b_id.unique()

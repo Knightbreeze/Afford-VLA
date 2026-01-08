@@ -32,9 +32,7 @@ class Evaluator:
             "NUM_PARALLEL_CORES": 8,
             "BREAK_ON_ERROR": True,  # Raises exception and exits with error
             "RETURN_ON_ERROR": False,  # if not BREAK_ON_ERROR, then returns from function on error
-            "LOG_ON_ERROR": os.path.join(
-                code_path, "error_log.txt"
-            ),  # if not None, save any errors into a log file.
+            "LOG_ON_ERROR": os.path.join(code_path, "error_log.txt"),  # if not None, save any errors into a log file.
             "PRINT_RESULTS": True,
             "PRINT_ONLY_COMBINED": False,
             "PRINT_CONFIG": True,
@@ -74,26 +72,17 @@ class Evaluator:
         # narrow the target for evaluation
         if target_tag is not None:
             target_video_ids = [
-                annot["video_id"]
-                for annot in dataset.gt_data["annotations"]
-                if target_tag in annot["tags"]
+                annot["video_id"] for annot in dataset.gt_data["annotations"] if target_tag in annot["tags"]
             ]
-            vid2name = {
-                video["id"]: video["file_names"][0].split("/")[0]
-                for video in dataset.gt_data["videos"]
-            }
+            vid2name = {video["id"]: video["file_names"][0].split("/")[0] for video in dataset.gt_data["videos"]}
             target_video_ids = set(target_video_ids)
             target_video = [vid2name[video_id] for video_id in target_video_ids]
 
             if len(target_video) == 0:
-                raise TrackEvalException(
-                    "No sequences found with the tag %s" % target_tag
-                )
+                raise TrackEvalException("No sequences found with the tag %s" % target_tag)
 
             target_annotations = [
-                annot
-                for annot in dataset.gt_data["annotations"]
-                if annot["video_id"] in target_video_ids
+                annot for annot in dataset.gt_data["annotations"] if annot["video_id"] in target_video_ids
             ]
             assert all(target_tag in annot["tags"] for annot in target_annotations), (
                 f"Not all annotations in the target sequences have the target tag {target_tag}. "
@@ -109,8 +98,7 @@ class Evaluator:
                 curr_res = {
                     seq_key: seq_value[c_cls][metric_name]
                     for seq_key, seq_value in res.items()
-                    if not seq_key.startswith("COMBINED_SEQ")
-                    and seq_key in target_video
+                    if not seq_key.startswith("COMBINED_SEQ") and seq_key in target_video
                 }
                 res[res_field][c_cls][metric_name] = metric.combine_sequences(curr_res)
         # combine classes
@@ -128,12 +116,8 @@ class Evaluator:
                     for cls_key, cls_value in res[res_field].items()
                     if cls_key not in combined_cls_keys
                 }
-                res[res_field]["cls_comb_cls_av"][metric_name] = (
-                    metric.combine_classes_class_averaged(cls_res)
-                )
-                res[res_field]["cls_comb_det_av"][metric_name] = (
-                    metric.combine_classes_det_averaged(cls_res)
-                )
+                res[res_field]["cls_comb_cls_av"][metric_name] = metric.combine_classes_class_averaged(cls_res)
+                res[res_field]["cls_comb_det_av"][metric_name] = metric.combine_classes_det_averaged(cls_res)
         # combine classes to super classes
         if dataset.use_super_categories:
             for cat, sub_cats in dataset.super_categories.items():
@@ -145,9 +129,7 @@ class Evaluator:
                         for cls_key, cls_value in res[res_field].items()
                         if cls_key in sub_cats
                     }
-                    res[res_field][cat][metric_name] = (
-                        metric.combine_classes_det_averaged(cat_res)
-                    )
+                    res[res_field][cat][metric_name] = metric.combine_classes_det_averaged(cat_res)
         return res, combined_cls_keys
 
     def _summarize_results(
@@ -163,9 +145,7 @@ class Evaluator:
         config = self.config
         output_fol = dataset.get_output_fol(tracker)
         tracker_display_name = dataset.get_display_name(tracker)
-        for c_cls in res[
-            res_field
-        ].keys():  # class_list + combined classes if calculated
+        for c_cls in res[res_field].keys():  # class_list + combined classes if calculated
             summaries = []
             details = []
             num_dets = res[res_field][c_cls]["Count"]["Dets"]
@@ -175,16 +155,10 @@ class Evaluator:
                     if c_cls in combined_cls_keys:
                         table_res = {res_field: res[res_field][c_cls][metric_name]}
                     else:
-                        table_res = {
-                            seq_key: seq_value[c_cls][metric_name]
-                            for seq_key, seq_value in res.items()
-                        }
+                        table_res = {seq_key: seq_value[c_cls][metric_name] for seq_key, seq_value in res.items()}
 
                     if config["PRINT_RESULTS"] and config["PRINT_ONLY_COMBINED"]:
-                        dont_print = (
-                            dataset.should_classes_combine
-                            and c_cls not in combined_cls_keys
-                        )
+                        dont_print = dataset.should_classes_combine and c_cls not in combined_cls_keys
                         if not dont_print:
                             metric.print_table(
                                 {res_field: table_res[res_field]},
@@ -194,9 +168,7 @@ class Evaluator:
                                 res_field,
                             )
                     elif config["PRINT_RESULTS"]:
-                        metric.print_table(
-                            table_res, tracker_display_name, c_cls, res_field, res_field
-                        )
+                        metric.print_table(table_res, tracker_display_name, c_cls, res_field, res_field)
                     if config["OUTPUT_SUMMARY"]:
                         summaries.append(metric.summary_results(table_res))
                     if config["OUTPUT_DETAILED"]:
@@ -253,9 +225,7 @@ class Evaluator:
                         if show_progressbar and TQDM_IMPORTED:
                             seq_list_sorted = sorted(seq_list)
 
-                            with Pool(config["NUM_PARALLEL_CORES"]) as pool, tqdm.tqdm(
-                                total=len(seq_list)
-                            ) as pbar:
+                            with Pool(config["NUM_PARALLEL_CORES"]) as pool, tqdm.tqdm(total=len(seq_list)) as pbar:
                                 _eval_sequence = partial(
                                     eval_sequence,
                                     dataset=dataset,
@@ -265,9 +235,7 @@ class Evaluator:
                                     metric_names=metric_names,
                                 )
                                 results = []
-                                for r in pool.imap(
-                                    _eval_sequence, seq_list_sorted, chunksize=20
-                                ):
+                                for r in pool.imap(_eval_sequence, seq_list_sorted, chunksize=20):
                                     results.append(r)
                                     pbar.update()
                                 res = dict(zip(seq_list_sorted, results))
@@ -313,9 +281,7 @@ class Evaluator:
                         res, metrics_list, metric_names, dataset, "COMBINED_SEQ"
                     )
 
-                    if np.all(
-                        ["tags" in annot for annot in dataset.gt_data["annotations"]]
-                    ):
+                    if np.all(["tags" in annot for annot in dataset.gt_data["annotations"]]):
                         # Combine results over the challenging sequences and then over all classes
                         # currently only support "tracking_challenging_pair"
                         res, _ = self._combine_results(
@@ -329,10 +295,7 @@ class Evaluator:
 
                     # Print and output results in various formats
                     if config["TIME_PROGRESS"]:
-                        print(
-                            "\nAll sequences for %s finished in %.2f seconds"
-                            % (tracker, time.time() - time_start)
-                        )
+                        print("\nAll sequences for %s finished in %.2f seconds" % (tracker, time.time() - time_start))
 
                     self._summarize_results(
                         res,

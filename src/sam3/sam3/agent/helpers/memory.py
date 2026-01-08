@@ -1,8 +1,8 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
-import logging
 from contextlib import contextmanager
 from functools import wraps
+import logging
 
 import torch
 
@@ -62,8 +62,7 @@ def retry_if_cuda_oom(func):
             like_gpu_tensor = False
         if like_gpu_tensor:
             return x.to(device="cpu")
-        else:
-            return x
+        return x
 
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -77,9 +76,7 @@ def retry_if_cuda_oom(func):
 
         # Try on CPU. This slows down the code significantly, therefore print a notice.
         logger = logging.getLogger(__name__)
-        logger.info(
-            "Attempting to copy inputs of {} to CPU due to CUDA OOM".format(str(func))
-        )
+        logger.info(f"Attempting to copy inputs of {func!s} to CPU due to CUDA OOM")
         new_args = (maybe_to_cpu(x) for x in args)
         new_kwargs = {k: maybe_to_cpu(v) for k, v in kwargs.items()}
         return func(*new_args, **new_kwargs)

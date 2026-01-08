@@ -1,7 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 import math
-from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -13,7 +12,8 @@ except ModuleNotFoundError:
     # compatibility for older timm versions
     from timm.models.layers import DropPath
 
-from .model_misc import get_clones, LayerNorm2d
+from .model_misc import LayerNorm2d
+from .model_misc import get_clones
 
 
 class SimpleMaskDownSampler(nn.Module):
@@ -109,13 +109,11 @@ class CXBlock(nn.Module):
             groups=dim if use_dwconv else 1,
         )  # depthwise conv
         self.norm = LayerNorm2d(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(
-            dim, 4 * dim
-        )  # pointwise/1x1 convs, implemented with linear layers
+        self.pwconv1 = nn.Linear(dim, 4 * dim)  # pointwise/1x1 convs, implemented with linear layers
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(4 * dim, dim)
         self.gamma = (
-            nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
             if layer_scale_init_value > 0
             else None
         )
@@ -180,7 +178,7 @@ class SimpleMaskEncoder(nn.Module):
         pix_feat: torch.Tensor,
         masks: torch.Tensor,
         skip_mask_sigmoid: bool = False,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         ## Process masks
         # sigmoid, so that less domain shift from gt masks which are bool
         if not skip_mask_sigmoid:

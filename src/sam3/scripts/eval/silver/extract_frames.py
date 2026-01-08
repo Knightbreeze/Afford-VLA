@@ -7,20 +7,18 @@ Call like:
 """
 
 import json
+from multiprocessing import Pool
 import os
 import shutil
 import sys
-from multiprocessing import Pool
 
 from PIL import Image
 from tqdm import tqdm
-from utils import (
-    annotation_files,
-    config,
-    get_frame_from_video,
-    is_valid_image,
-    update_annotations,
-)
+from utils import annotation_files
+from utils import config
+from utils import get_frame_from_video
+from utils import is_valid_image
+from utils import update_annotations
 
 
 def extract_frame(path_video, global_frame_idx, path_frame, image_size, file_name):
@@ -66,12 +64,10 @@ def process_image(args):
 def main():
     assert len(sys.argv) > 1, "You have to provide the name of the dataset"
     dataset_name = sys.argv[1]
-    assert (
-        dataset_name in annotation_files
-    ), f"The dataset can be one of {list(annotation_files.keys())}"
+    assert dataset_name in annotation_files, f"The dataset can be one of {list(annotation_files.keys())}"
     all_outputs = []
     for file in annotation_files[dataset_name]:
-        with open(os.path.join(config["path_annotations"], file), "r") as f:
+        with open(os.path.join(config["path_annotations"], file)) as f:
             annotation = json.load(f)
         images = annotation["images"]
         images = set(
@@ -85,9 +81,7 @@ def main():
         )
         args_list = [(image, dataset_name, config) for image in images]
         with Pool(os.cpu_count()) as pool:
-            outputs = list(
-                tqdm(pool.imap_unordered(process_image, args_list), total=len(images))
-            )
+            outputs = list(tqdm(pool.imap_unordered(process_image, args_list), total=len(images)))
         all_outputs.extend(outputs)
     if any(out is None for out in outputs):
         update_annotations(dataset_name, all_outputs, key="file_name")

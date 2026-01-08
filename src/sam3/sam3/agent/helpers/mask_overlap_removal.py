@@ -1,6 +1,5 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
-from typing import Dict, List
 
 import numpy as np
 import torch
@@ -11,9 +10,7 @@ except Exception:
     mask_utils = None
 
 
-def mask_intersection(
-    masks1: torch.Tensor, masks2: torch.Tensor, block_size: int = 16
-) -> torch.Tensor:
+def mask_intersection(masks1: torch.Tensor, masks2: torch.Tensor, block_size: int = 16) -> torch.Tensor:
     assert masks1.shape[1:] == masks2.shape[1:]
     assert masks1.dtype == torch.bool and masks2.dtype == torch.bool
     N, M = masks1.shape[0], masks2.shape[0]
@@ -45,9 +42,7 @@ def _decode_single_mask(mask_repr, h: int, w: int) -> np.ndarray:
         return (arr > 0).astype(np.uint8)
 
     if mask_utils is None:
-        raise ImportError(
-            "pycocotools is required to decode RLE mask strings. pip install pycocotools"
-        )
+        raise ImportError("pycocotools is required to decode RLE mask strings. pip install pycocotools")
 
     if not isinstance(mask_repr, (str, bytes)):
         raise ValueError("Unsupported mask representation type for RLE decode.")
@@ -62,13 +57,13 @@ def _decode_single_mask(mask_repr, h: int, w: int) -> np.ndarray:
     return (decoded > 0).astype(np.uint8)
 
 
-def _decode_masks_to_torch_bool(pred_masks: List, h: int, w: int) -> torch.Tensor:
+def _decode_masks_to_torch_bool(pred_masks: list, h: int, w: int) -> torch.Tensor:
     bin_masks = [_decode_single_mask(m, h, w) for m in pred_masks]
     masks_np = np.stack(bin_masks, axis=0).astype(np.uint8)  # (N, H, W)
     return torch.from_numpy(masks_np > 0)
 
 
-def remove_overlapping_masks(sample: Dict, iom_thresh: float = 0.3) -> Dict:
+def remove_overlapping_masks(sample: dict, iom_thresh: float = 0.3) -> dict:
     """
     Greedy keep: sort by score desc; keep a mask if IoM to all kept masks <= threshold.
     If pred_masks has length 0 or 1, returns sample unchanged (no extra keys).
@@ -88,17 +83,17 @@ def remove_overlapping_masks(sample: Dict, iom_thresh: float = 0.3) -> Dict:
     h = int(sample["orig_img_h"])
     w = int(sample["orig_img_w"])
     pred_scores = sample.get("pred_scores", [1.0] * N)  # fallback if scores missing
-    pred_boxes = sample.get("pred_boxes", None)
+    pred_boxes = sample.get("pred_boxes")
 
-    assert N == len(pred_scores), "pred_masks and pred_scores must have same length"
+    assert len(pred_scores) == N, "pred_masks and pred_scores must have same length"
     if pred_boxes is not None:
-        assert N == len(pred_boxes), "pred_masks and pred_boxes must have same length"
+        assert len(pred_boxes) == N, "pred_masks and pred_boxes must have same length"
 
     masks_bool = _decode_masks_to_torch_bool(pred_masks, h, w)  # (N, H, W)
 
     order = sorted(range(N), key=lambda i: float(pred_scores[i]), reverse=True)
-    kept_idx: List[int] = []
-    kept_masks: List[torch.Tensor] = []
+    kept_idx: list[int] = []
+    kept_masks: list[torch.Tensor] = []
 
     for i in order:
         cand = masks_bool[i].unsqueeze(0)  # (1, H, W)

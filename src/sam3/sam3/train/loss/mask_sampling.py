@@ -1,6 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
-from typing import Callable
+from collections.abc import Callable
 
 import torch
 from torch.nn import functional as F
@@ -80,13 +80,9 @@ def get_uncertain_point_coords_with_randomness(
     num_random_points = num_points - num_uncertain_points
     idx = torch.topk(point_uncertainties[:, 0, :], k=num_uncertain_points, dim=1)[1]
     # Flatten the indices
-    shift = num_sampled * torch.arange(
-        num_boxes, dtype=torch.long, device=logits.device
-    )
+    shift = num_sampled * torch.arange(num_boxes, dtype=torch.long, device=logits.device)
     idx += shift[:, None]
-    point_coords = point_coords.view(-1, 2)[idx.view(-1), :].view(
-        num_boxes, num_uncertain_points, 2
-    )
+    point_coords = point_coords.view(-1, 2)[idx.view(-1), :].view(num_boxes, num_uncertain_points, 2)
     if num_random_points > 0:
         point_coords = torch.cat(
             [

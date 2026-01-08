@@ -32,15 +32,11 @@ recursive_contiguous = recursive_fn_factory(lambda x: x.contiguous())
 recursive_clone = recursive_fn_factory(torch.clone)
 
 
-def compile_wrapper(
-    fn, *, mode="max-autotune", fullgraph=True, dynamic=False, name=None
-):
+def compile_wrapper(fn, *, mode="max-autotune", fullgraph=True, dynamic=False, name=None):
     compiled_fn = torch.compile(fn, mode=mode, fullgraph=fullgraph, dynamic=dynamic)
 
     def compiled_fn_wrapper(*args, **kwargs):
-        with torch.autograd.profiler.record_function(
-            f"compiled {fn}" if name is None else name
-        ):
+        with torch.autograd.profiler.record_function(f"compiled {fn}" if name is None else name):
             cont_args = recursive_contiguous(args)
             cont_kwargs = recursive_contiguous(kwargs)
             result = compiled_fn(*cont_args, **cont_kwargs)
@@ -65,21 +61,19 @@ def shape_logging_wrapper(fn, keep_kwargs, enable_logging=False):
     def get_shape(obj):
         if isinstance(obj, torch.Tensor):
             return obj.shape
-        elif isinstance(obj, (list, tuple)):
+        if isinstance(obj, (list, tuple)):
             if len(obj) > 1:
                 return tuple(get_shape(x) for x in obj)
             return get_shape(obj[0])
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             return tuple(sorted((k, get_shape(v)) for k, v in obj.items()))
-        else:
-            return type(obj).__name__
+        return type(obj).__name__
 
     def wrapper(*args, **kwargs):
         shapes = tuple(get_shape(arg) for arg in args) + tuple(
             (k, get_shape(v))
             for k, v in kwargs.items()
-            if isinstance(v, (torch.Tensor, list))
-            and (len(keep_kwargs) > 0 and k in keep_kwargs)
+            if isinstance(v, (torch.Tensor, list)) and (len(keep_kwargs) > 0 and k in keep_kwargs)
         )
         if shapes not in seen_shapes:
             seen_shapes.add(shapes)

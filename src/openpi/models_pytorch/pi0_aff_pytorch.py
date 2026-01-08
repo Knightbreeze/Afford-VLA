@@ -1,18 +1,18 @@
 import logging
 import math
-from torchvision.transforms import ToPILImage
 
 import torch
 from torch import Tensor
 from torch import nn
 import torch.nn.functional as F  # noqa: N812
+from torchvision.transforms import ToPILImage
 
 import openpi.models.gemma as _gemma
+from openpi.models_pytorch.aff_align_utils import custom_pooling
 from openpi.models_pytorch.gemma_pytorch import PaliGemmaWithExpertModel
 import openpi.models_pytorch.preprocessing_pytorch as _preprocessing
-
-from openpi.models_pytorch.aff_align_utils import custom_pooling
 from openpi.models_pytorch.projectors import CrossAttentionAlignProjector
+
 
 def get_safe_dtype(target_dtype, device_type):
     """Get a safe dtype for the given device type."""
@@ -93,7 +93,7 @@ class PI0Pytorch(nn.Module):
         paligemma_config = _gemma.get_config(config.paligemma_variant)
         action_expert_config = _gemma.get_config(config.action_expert_variant)
 
-        self.VLA_LLM_dim = paligemma_config.width # 2048
+        self.VLA_LLM_dim = paligemma_config.width  # 2048
 
         self.paligemma_with_expert = PaliGemmaWithExpertModel(
             paligemma_config,
@@ -137,7 +137,6 @@ class PI0Pytorch(nn.Module):
                 # MLP
                 self.pooling_func = extra_config.pooling_func
                 self.use_aff_pe = extra_config.use_aff_pe
-
 
         msg = "transformers_replace is not installed correctly. Please install it with `uv pip install transformers==4.53.2` and `cp -r ./src/openpi/models_pytorch/transformers_replace/* .venv/lib/python3.11/site-packages/transformers/`."
         try:
@@ -185,7 +184,9 @@ class PI0Pytorch(nn.Module):
 
     def _preprocess_observation(self, observation, *, train=True, save_original=False):
         """Helper method to preprocess observation."""
-        observation = _preprocessing.preprocess_observation_pytorch(observation, train=train, save_original=save_original)
+        observation = _preprocessing.preprocess_observation_pytorch(
+            observation, train=train, save_original=save_original
+        )
         return (
             list(observation.images.values()),
             observation.original_images if save_original else None,
@@ -194,7 +195,6 @@ class PI0Pytorch(nn.Module):
             observation.tokenized_prompt_mask,
             observation.state,
         )
-
 
     def sample_noise(self, shape, device):
         return torch.normal(
@@ -344,9 +344,11 @@ class PI0Pytorch(nn.Module):
 
     def forward(self, observation, actions, aff_prompts, aff_processor, align_proj, noise=None, time=None) -> Tensor:
         """Do a full training forward pass and compute the loss (batch_size x num_steps x num_motors)"""
-        images, original_images, img_masks, lang_tokens, lang_masks, state = self._preprocess_observation(observation, train=True, save_original=True)
-        
-        ''' ========================== VLA action loss =========================='''
+        images, original_images, img_masks, lang_tokens, lang_masks, state = self._preprocess_observation(
+            observation, train=True, save_original=True
+        )
+
+        """ ========================== VLA action loss =========================="""
         if noise is None:
             noise = self.sample_noise(actions.shape, actions.device)
 
@@ -357,8 +359,9 @@ class PI0Pytorch(nn.Module):
         x_t = time_expanded * noise + (1 - time_expanded) * actions
         u_t = noise - actions
 
-        prefix_embs, prefix_pad_masks, prefix_att_masks, img_len = self.embed_prefix(images, img_masks, lang_tokens, lang_masks)
-
+        prefix_embs, prefix_pad_masks, prefix_att_masks, img_len = self.embed_prefix(
+            images, img_masks, lang_tokens, lang_masks
+        )
 
         suffix_embs, suffix_pad_masks, suffix_att_masks, adarms_cond = self.embed_suffix(state, x_t, time)
         if (
@@ -379,14 +382,14 @@ class PI0Pytorch(nn.Module):
 
         # Apply gradient checkpointing if enabled
         def forward_func(prefix_embs, suffix_embs, att_2d_masks_4d, position_ids, adarms_cond):
-            (_, suffix_out), _ ,all_hidden_states = self.paligemma_with_expert.forward(
+            (_, suffix_out), _, all_hidden_states = self.paligemma_with_expert.forward(
                 attention_mask=att_2d_masks_4d,
                 position_ids=position_ids,
                 past_key_values=None,
                 inputs_embeds=[prefix_embs, suffix_embs],
                 use_cache=False,
                 adarms_cond=[None, adarms_cond],
-                output_hidden_states=True
+                output_hidden_states=True,
             )
             return suffix_out, all_hidden_states
 
@@ -405,10 +408,11 @@ class PI0Pytorch(nn.Module):
 
         action_loss = F.mse_loss(u_t, v_t, reduction="none")
 
-
-        ''' ========================== Affordance Alignment loss =========================='''
+        """ ========================== Affordance Alignment loss =========================="""
         # 1. VLA hidden states
-        (prefix_hidden, _) = all_hidden_states[self.vla_layers_align]  # 18 total layers of paligemma self.vla_layers_align：12
+        (prefix_hidden, _) = all_hidden_states[
+            self.vla_layers_align
+        ]  # 18 total layers of paligemma self.vla_layers_align：12
         vision_hidden = prefix_hidden[:, :img_len, :]
 
         # 2. Affordance hidden states
@@ -416,7 +420,7 @@ class PI0Pytorch(nn.Module):
 
         to_pil = ToPILImage()
         pil_images = []
-        for i in range(third_view_image_batch.shape[0]): # torch.tensor[-1, 1] 
+        for i in range(third_view_image_batch.shape[0]):  # torch.tensor[-1, 1]
             img_tensor = third_view_image_batch[i]  # [C, H, W]
             if img_tensor.min() < 0:
                 # [-1, 1] -> [0, 1]
@@ -424,16 +428,16 @@ class PI0Pytorch(nn.Module):
             img_tensor = torch.clamp(img_tensor, 0, 1)
             pil_img = to_pil(img_tensor.cpu())
             pil_images.append(pil_img)
-        
+
         with torch.no_grad():
             inference_state_aff_backbone = aff_processor.set_image_batch(pil_images)
 
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 aff_output = aff_processor.set_text_prompt_batch(
-                    prompts=aff_prompts, # List[str]
-                    state=inference_state_aff_backbone
+                    prompts=aff_prompts,  # List[str]
+                    state=inference_state_aff_backbone,
                 )
-        
+
         aff_img_fusion_hidden = aff_output["encoder_hidden_states"]  # [72x72, B, 256] [H*W, B, C]
         aff_prompt_features = aff_output["prompt_features"]
         aff_prompt_mask = aff_output["prompt_mask"]
@@ -441,9 +445,9 @@ class PI0Pytorch(nn.Module):
         aff_hidden = aff_img_fusion_hidden
 
         # 3. empty image feature masks for alignment loss
-        tokens_per_img = img_len // len(images) # 256
+        tokens_per_img = img_len // len(images)  # 256
         img_masks_stack = torch.stack(img_masks, dim=1)
-        align_mask = torch.repeat_interleave(img_masks_stack, repeats=tokens_per_img, dim=1) # [B, N_vis]
+        align_mask = torch.repeat_interleave(img_masks_stack, repeats=tokens_per_img, dim=1)  # [B, N_vis]
 
         # 4. Spatial Alignment & calculate align loss
         if self.use_cross_attn_align:
@@ -451,32 +455,32 @@ class PI0Pytorch(nn.Module):
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 align_loss = self.cross_attn_align_loss(
                     vision_hidden,  # [B, N_vis, D_vis] - Query
-                    aff_hidden,     # [S_aff, B, D_aff] - Key & Value
-                    align_mask      # [B, N_vis]
+                    aff_hidden,  # [S_aff, B, D_aff] - Key & Value
+                    align_mask,  # [B, N_vis]
                 )
         else:
             # ========== MLP ==========
             if isinstance(aff_output["vis_feat_sizes"], list):
                 feat_h, feat_w = aff_output["vis_feat_sizes"][0]
             else:
-                feat_h, feat_w = (72, 72) # seq_image_size = 72
+                feat_h, feat_w = (72, 72)  # seq_image_size = 72
 
             if isinstance(aff_output["SigLIP_patch_size"], list):
                 patch_h = patch_w = aff_output["SigLIP_patch_size"]
             else:
-                patch_h = patch_w = 14 # SigLIP_patch_size = 14
-            
+                patch_h = patch_w = 14  # SigLIP_patch_size = 14
+
             H_aff = feat_h * patch_h  # aff_input_img_size: 1008 × 1008
             W_aff = feat_w * patch_w  # aff_input_img_size: 1008 × 1008
-            
+
             # Process aff_hidden to match vision_hidden's spatial size
             aff_hidden = custom_pooling(
-                aff_hidden,           # [5184, B, 256]
-                (feat_h, feat_w),     # (72, 72)
-                (H_aff, W_aff),       # (1008, 1008)
-                vision_hidden,        # [B, img_len, D]
-                self.pooling_func,    # 'bilinear'
-                self.use_aff_pe       # True/False
+                aff_hidden,  # [5184, B, 256]
+                (feat_h, feat_w),  # (72, 72)
+                (H_aff, W_aff),  # (1008, 1008)
+                vision_hidden,  # [B, img_len, D]
+                self.pooling_func,  # 'bilinear'
+                self.use_aff_pe,  # True/False
             )
 
             # calculate align loss
@@ -484,8 +488,6 @@ class PI0Pytorch(nn.Module):
                 align_loss = align_proj(vision_hidden, aff_hidden, align_mask)
 
         return action_loss, align_loss
-    
-
 
     @torch.no_grad()
     def sample_actions(self, device, observation, noise=None, num_steps=10) -> Tensor:
@@ -495,7 +497,9 @@ class PI0Pytorch(nn.Module):
             actions_shape = (bsize, self.config.action_horizon, self.config.action_dim)
             noise = self.sample_noise(actions_shape, device)
 
-        images, img_masks, lang_tokens, lang_masks, state = self._preprocess_observation(observation, train=False, save_original=False)
+        images, img_masks, lang_tokens, lang_masks, state = self._preprocess_observation(
+            observation, train=False, save_original=False
+        )
 
         prefix_embs, prefix_pad_masks, prefix_att_masks = self.embed_prefix(images, img_masks, lang_tokens, lang_masks)
         prefix_att_2d_masks = make_att_2d_masks(prefix_pad_masks, prefix_att_masks)

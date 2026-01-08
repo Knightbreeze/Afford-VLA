@@ -6,17 +6,15 @@ This means that the model's predictions are thresholded and evaluated as "hard" 
 """
 
 import logging
-from typing import Optional
 
 import numpy as np
-import pycocotools.mask as maskUtils
 from pycocotools.cocoeval import COCOeval
+import pycocotools.mask as maskUtils
+from scipy.optimize import linear_sum_assignment
 
 from sam3.eval.coco_eval import CocoEvaluator
 from sam3.train.masks_ops import compute_F_measure
 from sam3.train.utils.distributed import is_main_process
-
-from scipy.optimize import linear_sum_assignment
 
 
 class DemoEval(COCOeval):
@@ -281,25 +279,14 @@ class DemoEval(COCOeval):
         recall = TPs / (TPs + FNs + 1e-4)
         assert np.all(recall <= 1)
         F1 = 2 * precision * recall / (precision + recall + 1e-4)
-        positive_micro_F1 = (
-            2
-            * positive_micro_precision
-            * recall
-            / (positive_micro_precision + recall + 1e-4)
-        )
+        positive_micro_F1 = 2 * positive_micro_precision * recall / (positive_micro_precision + recall + 1e-4)
 
         IL_rec = IL_TPs / (IL_TPs + IL_FNs + 1e-6)
         IL_prec = IL_TPs / (IL_TPs + IL_FPs + 1e-6)
         IL_F1 = 2 * IL_prec * IL_rec / (IL_prec + IL_rec + 1e-6)
         IL_FPR = IL_FPs / (IL_FPs + IL_TNs + 1e-6)
         IL_MCC = float(IL_TPs * IL_TNs - IL_FPs * IL_FNs) / (
-            (
-                float(IL_TPs + IL_FPs)
-                * float(IL_TPs + IL_FNs)
-                * float(IL_TNs + IL_FPs)
-                * float(IL_TNs + IL_FNs)
-            )
-            ** 0.5
+            (float(IL_TPs + IL_FPs) * float(IL_TPs + IL_FNs) * float(IL_TNs + IL_FPs) * float(IL_TNs + IL_FNs)) ** 0.5
             + 1e-6
         )
         IL_perfect_pos = IL_perfects_pos / (total_pos_count + 1e-9)
@@ -334,9 +321,7 @@ class DemoEval(COCOeval):
             "J&F": total_JnF,
         }
         self.eval["CGF1"] = self.eval["positive_macro_F1"] * self.eval["IL_MCC"]
-        self.eval["CGF1_w0dt"] = (
-            self.eval["positive_w0dt_macro_F1"] * self.eval["IL_MCC"]
-        )
+        self.eval["CGF1_w0dt"] = self.eval["positive_w0dt_macro_F1"] * self.eval["IL_MCC"]
         self.eval["CGF1_micro"] = self.eval["positive_micro_F1"] * self.eval["IL_MCC"]
 
     def summarize(self):
@@ -351,11 +336,7 @@ class DemoEval(COCOeval):
             p = self.params
             iStr = " {:<18} @[ IoU={:<9}] = {:0.3f}"
             titleStr = "Average " + metric
-            iouStr = (
-                "{:0.2f}:{:0.2f}".format(p.iouThrs[0], p.iouThrs[-1])
-                if iouThr is None
-                else "{:0.2f}".format(iouThr)
-            )
+            iouStr = f"{p.iouThrs[0]:0.2f}:{p.iouThrs[-1]:0.2f}" if iouThr is None else f"{iouThr:0.2f}"
 
             s = self.eval[metric]
             # IoU
@@ -485,7 +466,7 @@ class DemoEvaluator(CocoEvaluator):
         self,
         coco_gt,
         iou_types,
-        dump_dir: Optional[str],
+        dump_dir: str | None,
         postprocessor,
         threshold=0.5,
         average_by_rarity=False,
@@ -493,7 +474,7 @@ class DemoEvaluator(CocoEvaluator):
         exhaustive_only=False,
         all_exhaustive_only=True,
         compute_JnF=False,
-        metrics_dump_dir: Optional[str] = None,
+        metrics_dump_dir: str | None = None,
     ):
         self.iou_types = iou_types
         self.threshold = threshold
@@ -529,14 +510,10 @@ class DemoEvaluator(CocoEvaluator):
         assert (
             scorings[0].ndim == 3
         ), f"Expecting results in [numCats, numAreas, numImgs] format, got {scorings[0].shape}"
-        assert (
-            scorings[0].shape[0] == 1
-        ), f"Expecting a single category, got {scorings[0].shape[0]}"
+        assert scorings[0].shape[0] == 1, f"Expecting a single category, got {scorings[0].shape[0]}"
 
         for scoring in scorings:
-            assert (
-                scoring.shape == scorings[0].shape
-            ), f"Shape mismatch: {scoring.shape}, {scorings[0].shape}"
+            assert scoring.shape == scorings[0].shape, f"Shape mismatch: {scoring.shape}, {scorings[0].shape}"
 
         selected_imgs = []
         for img_id in range(scorings[0].shape[-1]):
@@ -552,11 +529,10 @@ class DemoEvaluator(CocoEvaluator):
                     if current_score > best_score:
                         best = current
 
-                else:
-                    # If we're here, it means that in that in some evaluation we were not able to get a valid local F1
-                    # This happens when both the predictions and targets are empty. In that case, we can assume it's a perfect prediction
-                    if "local_F1s" not in current[0, 0]:
-                        best = current
+                # If we're here, it means that in that in some evaluation we were not able to get a valid local F1
+                # This happens when both the predictions and targets are empty. In that case, we can assume it's a perfect prediction
+                elif "local_F1s" not in current[0, 0]:
+                    best = current
             selected_imgs.append(best)
         result = np.stack(selected_imgs, axis=-1)
         assert result.shape == scorings[0].shape
@@ -572,7 +548,7 @@ class DemoEvaluator(CocoEvaluator):
         # if self.rarity_buckets is None:
         self.accumulate(self.eval_img_ids)
         for iou_type, coco_eval in self.coco_evals[0].items():
-            print("Demo metric, IoU type={}".format(iou_type))
+            print(f"Demo metric, IoU type={iou_type}")
             coco_eval.summarize()
 
         if "bbox" in self.coco_evals[0]:
@@ -628,9 +604,7 @@ class DemoEvaluator(CocoEvaluator):
 
     def accumulate(self, imgIds=None):
         self._lazy_init()
-        logging.info(
-            f"demo evaluator: Accumulating on {len(imgIds) if imgIds is not None else 'all'} images"
-        )
+        logging.info(f"demo evaluator: Accumulating on {len(imgIds) if imgIds is not None else 'all'} images")
         if not is_main_process():
             return
 

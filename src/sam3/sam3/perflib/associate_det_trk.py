@@ -2,10 +2,11 @@
 
 from collections import defaultdict
 
+from scipy.optimize import linear_sum_assignment
 import torch
 import torch.nn.functional as F
+
 from sam3.perflib.masks_ops import mask_iou
-from scipy.optimize import linear_sum_assignment
 
 
 def associate_det_trk(
@@ -70,11 +71,7 @@ def associate_det_trk(
         igeit_any_dim_1_list = igeit_any_dim_1.cpu().numpy().tolist()
         igeit_trk_list = igeit_trk.cpu().numpy().tolist()
 
-        det_scores_list = (
-            det_scores
-            if det_scores is None
-            else det_scores.cpu().float().numpy().tolist()
-        )
+        det_scores_list = det_scores if det_scores is None else det_scores.cpu().float().numpy().tolist()
 
         # Hungarian matching for tracks (one-to-one: each track matches at most one detection)
         # For detections: allow many tracks to match to the same detection (many-to-one)
@@ -87,9 +84,7 @@ def associate_det_trk(
         cost_matrix = 1 - iou.cpu().numpy()  # Hungarian solves for minimum cost
         row_ind, col_ind = linear_sum_assignment(cost_matrix)
 
-        def branchy_hungarian_better_uses_the_cpu(
-            cost_matrix, row_ind, col_ind, iou_list, det_masks, track_masks
-        ):
+        def branchy_hungarian_better_uses_the_cpu(cost_matrix, row_ind, col_ind, iou_list, det_masks, track_masks):
             matched_trk = set()
             matched_det = set()
             matched_det_scores = {}  # track index -> [det_score, det_score * iou] det score of matched detection mask
@@ -103,15 +98,11 @@ def associate_det_trk(
                     matched_det.add(d)
 
             # Tracks not matched by Hungarian assignment above threshold are unmatched
-            unmatched_trk_indices = [
-                t for t in range(track_masks.size(0)) if t not in matched_trk
-            ]
+            unmatched_trk_indices = [t for t in range(track_masks.size(0)) if t not in matched_trk]
 
             # For detections: allow many tracks to match to the same detection (many-to-one)
             # So, a detection is 'new' if it does not match any track above threshold
-            assert track_masks.size(0) == igeit.size(
-                1
-            )  # Needed for loop optimizaiton below
+            assert track_masks.size(0) == igeit.size(1)  # Needed for loop optimizaiton below
             new_det_indices = []
             for d in range(det_masks.size(0)):
                 if not igeit_any_dim_1_list[d]:
@@ -132,6 +123,4 @@ def associate_det_trk(
                 matched_det_scores,
             )
 
-        return (branchy_hungarian_better_uses_the_cpu)(
-            cost_matrix, row_ind, col_ind, iou_list, det_masks, track_masks
-        )
+        return (branchy_hungarian_better_uses_the_cpu)(cost_matrix, row_ind, col_ind, iou_list, det_masks, track_masks)

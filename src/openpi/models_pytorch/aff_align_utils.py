@@ -4,12 +4,11 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+
+import numpy as np
 import torch
 import torch.nn as nn
 
-import numpy as np
-from typing import List, Dict, Tuple, Union, Optional
-from einops import rearrange
 
 def position_grid_to_embed(pos_grid: torch.Tensor, embed_dim: int, omega_0: float = 100) -> torch.Tensor:
     """
@@ -114,7 +113,7 @@ def create_uv_grid(
 
 def _interpolate(
     x: torch.Tensor,
-    size: Tuple[int, int] = None,
+    size: tuple[int, int] = None,
     scale_factor: float = None,
     mode: str = "bilinear",
     align_corners: bool = True,
@@ -136,8 +135,7 @@ def _interpolate(
         ]
         x = torch.cat(interpolated_chunks, dim=0)
         return x.contiguous()
-    else:
-        return nn.functional.interpolate(x, size=size, mode=mode, align_corners=align_corners)
+    return nn.functional.interpolate(x, size=size, mode=mode, align_corners=align_corners)
 
 
 def _apply_pos_embed(x: torch.Tensor, W: int, H: int, ratio: float = 0.1) -> torch.Tensor:
@@ -158,28 +156,25 @@ def interpolate_pooling(hidden, patch_hw, img_hw, reference, pooling_func, use_v
     (img_h, img_w) = img_hw
 
     if hidden.ndim == 3:
-        S, B, D = hidden.shape # [S, B, D]
-        if S != patch_h * patch_w:
-            raise ValueError(f"Sequence length {S} does not match patch_hw {patch_h}x{patch_w}={patch_h*patch_w}")  
-        hidden = hidden.permute(1, 0, 2).unsqueeze(1)  # [B, 1, S, D] 
-    
+        S, B, D = hidden.shape  # [S, B, D]
+        if patch_h * patch_w != S:
+            raise ValueError(f"Sequence length {S} does not match patch_hw {patch_h}x{patch_w}={patch_h*patch_w}")
+        hidden = hidden.permute(1, 0, 2).unsqueeze(1)  # [B, 1, S, D]
+
     bs, N, S, D = hidden.shape
     re_sample_ratio = 1 / np.sqrt(N * S / reference.shape[1])
 
     _hidden = hidden.permute(0, 1, 3, 2)
-    _hidden = _hidden.reshape(bs*N, D, patch_h, patch_w)
+    _hidden = _hidden.reshape(bs * N, D, patch_h, patch_w)
 
     if use_vggt_pe:
         _hidden = _apply_pos_embed(_hidden, img_w, img_h)
-    hidden_pooling = _interpolate(
-        _hidden, scale_factor=re_sample_ratio, mode=pooling_func, align_corners=True
-    )
+    hidden_pooling = _interpolate(_hidden, scale_factor=re_sample_ratio, mode=pooling_func, align_corners=True)
     hidden_pooling = hidden_pooling.reshape(bs, N, D, -1).permute(0, 1, 3, 2).reshape(bs, -1, D)
     return hidden_pooling
 
 
 def custom_pooling(hidden, patch_hw, img_hw, reference, pooling_func, use_vggt_pe):
-    if pooling_func in ['bilinear']:
+    if pooling_func in ["bilinear"]:
         return interpolate_pooling(hidden, patch_hw, img_hw, reference, pooling_func, use_vggt_pe)
-    else:
-        raise NotImplementedError(f"Pooling function {pooling_func} is not implemented.")
+    raise NotImplementedError(f"Pooling function {pooling_func} is not implemented.")

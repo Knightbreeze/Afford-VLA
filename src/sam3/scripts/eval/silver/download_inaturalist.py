@@ -1,11 +1,11 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 import argparse
 import json
+from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tarfile
-from pathlib import Path
 
 from tqdm import tqdm
 
@@ -16,7 +16,7 @@ def download_archive(url, dest_dir):
     archive_path = dest_dir / url.split("/")[-1]
     if not archive_path.exists():
         print(f"Downloading archive to {archive_path}...")
-        result = subprocess.run(["wget", "-O", str(archive_path), url])
+        result = subprocess.run(["wget", "-O", str(archive_path), url], check=False)
         if result.returncode != 0:
             print("Download failed.")
             sys.exit(1)
@@ -33,7 +33,7 @@ def extract_archive(archive_path, dest_dir):
 
 
 def copy_images(subset_json, untar_dir, output_dir):
-    with open(subset_json, "r") as f:
+    with open(subset_json) as f:
         image_dict = json.load(f)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -51,9 +51,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Download, extract, and copy subset of iNaturalist images from archive."
     )
-    parser.add_argument(
-        "--raw_images_folder", help="Path to downloaded and extract the archive"
-    )
+    parser.add_argument("--raw_images_folder", help="Path to downloaded and extract the archive")
     parser.add_argument("--processed_images_folder", help="Path to processed images")
     parser.add_argument(
         "--subset-json",

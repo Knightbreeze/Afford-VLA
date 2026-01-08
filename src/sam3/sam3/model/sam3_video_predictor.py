@@ -1,5 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
+from contextlib import closing
 import datetime
 import gc
 import multiprocessing as mp
@@ -9,8 +10,6 @@ import socket
 import sys
 import time
 import uuid
-from contextlib import closing
-from typing import List, Optional
 
 import psutil
 import torch
@@ -61,7 +60,7 @@ class Sam3VideoPredictor:
                 resource_path=request["resource_path"],
                 session_id=request.get("session_id", None),
             )
-        elif request_type == "add_prompt":
+        if request_type == "add_prompt":
             return self.add_prompt(
                 session_id=request["session_id"],
                 frame_idx=request["frame_index"],
@@ -72,18 +71,17 @@ class Sam3VideoPredictor:
                 bounding_box_labels=request.get("bounding_box_labels", None),
                 obj_id=request.get("obj_id", None),
             )
-        elif request_type == "remove_object":
+        if request_type == "remove_object":
             return self.remove_object(
                 session_id=request["session_id"],
                 obj_id=request["obj_id"],
                 is_user_action=request.get("is_user_action", True),
             )
-        elif request_type == "reset_session":
+        if request_type == "reset_session":
             return self.reset_session(session_id=request["session_id"])
-        elif request_type == "close_session":
+        if request_type == "close_session":
             return self.close_session(session_id=request["session_id"])
-        else:
-            raise RuntimeError(f"invalid request type: {request_type}")
+        raise RuntimeError(f"invalid request type: {request_type}")
 
     @torch.inference_mode()
     def handle_stream_request(self, request):
@@ -123,8 +121,7 @@ class Sam3VideoPredictor:
             "start_time": time.time(),
         }
         logger.debug(
-            f"started new session {session_id}; {self._get_session_stats()}; "
-            f"{self._get_torch_and_gpu_properties()}"
+            f"started new session {session_id}; {self._get_session_stats()}; " f"{self._get_torch_and_gpu_properties()}"
         )
         return {"session_id": session_id}
 
@@ -132,12 +129,12 @@ class Sam3VideoPredictor:
         self,
         session_id: str,
         frame_idx: int,
-        text: Optional[str] = None,
-        points: Optional[List[List[float]]] = None,
-        point_labels: Optional[List[int]] = None,
-        bounding_boxes: Optional[List[List[float]]] = None,
-        bounding_box_labels: Optional[List[int]] = None,
-        obj_id: Optional[int] = None,
+        text: str | None = None,
+        points: list[list[float]] | None = None,
+        point_labels: list[int] | None = None,
+        bounding_boxes: list[list[float]] | None = None,
+        bounding_box_labels: list[int] | None = None,
+        obj_id: int | None = None,
     ):
         """Add text, box and/or point prompt on a specific video frame."""
         logger.debug(
@@ -167,9 +164,7 @@ class Sam3VideoPredictor:
         is_user_action: bool = True,
     ):
         """Remove an object from tracking."""
-        logger.debug(
-            f"remove object {obj_id} in session {session_id}: " f"{is_user_action=}"
-        )
+        logger.debug(f"remove object {obj_id} in session {session_id}: " f"{is_user_action=}")
         session = self._get_session(session_id)
         inference_state = session["state"]
 
@@ -196,9 +191,7 @@ class Sam3VideoPredictor:
             session = self._get_session(session_id)
             inference_state = session["state"]
             if propagation_direction not in ["both", "forward", "backward"]:
-                raise ValueError(
-                    f"invalid propagation direction: {propagation_direction}"
-                )
+                raise ValueError(f"invalid propagation direction: {propagation_direction}")
 
             # First doing the forward propagation
             if propagation_direction in ["both", "forward"]:
@@ -221,9 +214,7 @@ class Sam3VideoPredictor:
         finally:
             # Log upon completion (so that e.g. we can see if two propagations happen in parallel).
             # Using `finally` here to log even when the tracking is aborted with GeneratorExit.
-            logger.debug(
-                f"propagation ended in session {session_id}; {self._get_session_stats()}"
-            )
+            logger.debug(f"propagation ended in session {session_id}; {self._get_session_stats()}")
 
     def reset_session(self, session_id):
         """Reset the session to its initial state (as when it's initial opened)."""
@@ -253,9 +244,7 @@ class Sam3VideoPredictor:
     def _get_session(self, session_id):
         session = self._ALL_INFERENCE_STATES.get(session_id, None)
         if session is None:
-            raise RuntimeError(
-                f"Cannot find session {session_id}; it might have expired"
-            )
+            raise RuntimeError(f"Cannot find session {session_id}; it might have expired")
         return session
 
     def _get_session_stats(self):
@@ -333,9 +322,7 @@ class Sam3VideoPredictorMultiGPU(Sam3VideoPredictor):
     def handle_request(self, request):
         """Dispatch a request based on its type."""
         if self.has_shutdown:
-            raise RuntimeError(
-                "cannot handle request after the predictor has shutdown; please create a new predictor"
-            )
+            raise RuntimeError("cannot handle request after the predictor has shutdown; please create a new predictor")
 
         # when starting a session, we need to create a session id before dispatching
         # the request to the workers
@@ -356,9 +343,7 @@ class Sam3VideoPredictorMultiGPU(Sam3VideoPredictor):
     def handle_stream_request(self, request):
         """Dispatch a stream request based on its type."""
         if self.has_shutdown:
-            raise RuntimeError(
-                "cannot handle request after the predictor has shutdown; please create a new predictor"
-            )
+            raise RuntimeError("cannot handle request after the predictor has shutdown; please create a new predictor")
 
         # dispatch the request to all worker processes
         if self.world_size > 1 and self.rank == 0:
@@ -463,9 +448,7 @@ class Sam3VideoPredictorMultiGPU(Sam3VideoPredictor):
         assert int(os.environ["RANK"]) == rank
         assert int(os.environ["WORLD_SIZE"]) == world_size
         # load the model in this worker process
-        predictor = Sam3VideoPredictorMultiGPU(
-            *model_args, gpus_to_use=gpus_to_use, **model_kwargs
-        )
+        predictor = Sam3VideoPredictorMultiGPU(*model_args, gpus_to_use=gpus_to_use, **model_kwargs)
         logger.info(f"started worker {rank=} with {world_size=}")
         # return the worker process id to the main process for bookkeeping
         worker_pid = os.getpid()
@@ -499,9 +482,7 @@ class Sam3VideoPredictorMultiGPU(Sam3VideoPredictor):
                 # to clean up its daemon child processes. So here we manually check whether the
                 # parent process still exists (every 5 sec as in `command_queue.get` timeout).
                 if not psutil.pid_exists(parent_pid):
-                    logger.info(
-                        f"stopping worker {rank=} as its parent process has exited"
-                    )
+                    logger.info(f"stopping worker {rank=} as its parent process has exited")
                     sys.exit(1)
             except Exception as e:
                 logger.error(f"worker {rank=} exception: {e}", exc_info=True)

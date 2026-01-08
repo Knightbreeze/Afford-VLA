@@ -70,7 +70,7 @@ def main(args):
                 if key.endswith(METRIC_NAME):
                     metric_results[METRIC_NAME].append(value)
 
-        except (json.JSONDecodeError, IOError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             print(f"Error reading {val_stats_path}: {e}")
             continue
 
@@ -82,7 +82,7 @@ def main(args):
 
         # Show individual dataset results
         for subset in VAL13_SET:
-            if subset in subset_results and subset_results[subset]:
+            if subset_results.get(subset):
                 for res_key, res_value in subset_results[subset].items():
                     if res_key.endswith(METRIC_NAME):
                         print(f"  {subset}: {res_value:.4f}")

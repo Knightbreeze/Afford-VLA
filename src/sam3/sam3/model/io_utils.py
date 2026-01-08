@@ -4,18 +4,20 @@ import contextlib
 import os
 import queue
 import re
+from threading import Condition
+from threading import Lock
+from threading import Thread
+from threading import get_ident
 import time
-from threading import Condition, get_ident, Lock, Thread
 
 import numpy as np
+from PIL import Image
 import torch
 import torch.nn.functional as F
 import torchvision.transforms.functional as TF
-
-from PIL import Image
+from tqdm import tqdm
 
 from sam3.logger import get_logger
-from tqdm import tqdm
 
 logger = get_logger(__name__)
 
@@ -66,10 +68,7 @@ def load_resource_as_video_frames(
             images = images.cuda()
         return images, orig_height, orig_width
 
-    is_image = (
-        isinstance(resource_path, str)
-        and os.path.splitext(resource_path)[-1].lower() in IMAGE_EXTS
-    )
+    is_image = isinstance(resource_path, str) and os.path.splitext(resource_path)[-1].lower() in IMAGE_EXTS
     if is_image:
         return load_image_as_single_frame_video(
             image_path=resource_path,
@@ -78,16 +77,15 @@ def load_resource_as_video_frames(
             img_mean=img_mean,
             img_std=img_std,
         )
-    else:
-        return load_video_frames(
-            video_path=resource_path,
-            image_size=image_size,
-            offload_video_to_cpu=offload_video_to_cpu,
-            img_mean=img_mean,
-            img_std=img_std,
-            async_loading_frames=async_loading_frames,
-            video_loader_type=video_loader_type,
-        )
+    return load_video_frames(
+        video_path=resource_path,
+        image_size=image_size,
+        offload_video_to_cpu=offload_video_to_cpu,
+        img_mean=img_mean,
+        img_std=img_std,
+        async_loading_frames=async_loading_frames,
+        video_loader_type=video_loader_type,
+    )
 
 
 def load_image_as_single_frame_video(
@@ -132,7 +130,7 @@ def load_video_frames(
         match = re.match(r"<load-dummy-video-(\d+)>", video_path)
         num_frames = int(match.group(1)) if match else 60
         return load_dummy_video(image_size, offload_video_to_cpu, num_frames=num_frames)
-    elif os.path.isdir(video_path):
+    if os.path.isdir(video_path):
         return load_video_frames_from_image_folder(
             image_folder=video_path,
             image_size=image_size,
@@ -141,7 +139,7 @@ def load_video_frames(
             img_std=img_std,
             async_loading_frames=async_loading_frames,
         )
-    elif os.path.splitext(video_path)[-1].lower() in VIDEO_EXTS:
+    if os.path.splitext(video_path)[-1].lower() in VIDEO_EXTS:
         return load_video_frames_from_video_file(
             video_path=video_path,
             image_size=image_size,
@@ -151,8 +149,7 @@ def load_video_frames(
             async_loading_frames=async_loading_frames,
             video_loader_type=video_loader_type,
         )
-    else:
-        raise NotImplementedError("Only video files and image folders are supported")
+    raise NotImplementedError("Only video files and image folders are supported")
 
 
 def load_video_frames_from_image_folder(
@@ -166,11 +163,7 @@ def load_video_frames_from_image_folder(
     """
     Load the video frames from a directory of image files ("<frame_index>.<img_ext>" format)
     """
-    frame_names = [
-        p
-        for p in os.listdir(image_folder)
-        if os.path.splitext(p)[-1].lower() in IMAGE_EXTS
-    ]
+    frame_names = [p for p in os.listdir(image_folder) if os.path.splitext(p)[-1].lower() in IMAGE_EXTS]
     try:
         frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
     except ValueError:
@@ -188,17 +181,13 @@ def load_video_frames_from_image_folder(
     img_std = torch.tensor(img_std, dtype=torch.float16)[:, None, None]
 
     if async_loading_frames:
-        lazy_images = AsyncImageFrameLoader(
-            img_paths, image_size, offload_video_to_cpu, img_mean, img_std
-        )
+        lazy_images = AsyncImageFrameLoader(img_paths, image_size, offload_video_to_cpu, img_mean, img_std)
         return lazy_images, lazy_images.video_height, lazy_images.video_width
 
     # float16 precision should be sufficient for image tensor storage
     images = torch.zeros(num_frames, 3, image_size, image_size, dtype=torch.float16)
     video_height, video_width = None, None
-    for n, img_path in enumerate(
-        tqdm(img_paths, desc=f"frame loading (image folder) [rank={RANK}]")
-    ):
+    for n, img_path in enumerate(tqdm(img_paths, desc=f"frame loading (image folder) [rank={RANK}]")):
         images[n], video_height, video_width = _load_img_as_tensor(img_path, image_size)
     if not offload_video_to_cpu:
         images = images.cuda()
@@ -230,7 +219,7 @@ def load_video_frames_from_video_file(
             img_std=img_std,
             offload_video_to_cpu=offload_video_to_cpu,
         )
-    elif video_loader_type == "torchcodec":
+    if video_loader_type == "torchcodec":
         logger.info("Using torchcodec to load video file")
         lazy_images = AsyncVideoFileLoaderWithTorchCodec(
             video_path=video_path,
@@ -248,8 +237,7 @@ def load_video_frames_from_video_file(
             if async_thread is not None:
                 async_thread.join()
         return lazy_images, lazy_images.video_height, lazy_images.video_width
-    else:
-        raise RuntimeError("video_loader_type must be either 'cv2' or 'torchcodec'")
+    raise RuntimeError("video_loader_type must be either 'cv2' or 'torchcodec'")
 
 
 def load_video_frames_from_video_file_using_cv2(
@@ -292,9 +280,7 @@ def load_video_frames_from_video_file_using_cv2(
 
         # Convert BGR to RGB and resize
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame_resized = cv2.resize(
-            frame_rgb, (image_size, image_size), interpolation=cv2.INTER_CUBIC
-        )
+        frame_resized = cv2.resize(frame_rgb, (image_size, image_size), interpolation=cv2.INTER_CUBIC)
         frames.append(frame_resized)
         pbar.update(1)
     cap.release()
@@ -381,9 +367,7 @@ class AsyncImageFrameLoader:
         if img is not None:
             return img
 
-        img, video_height, video_width = _load_img_as_tensor(
-            self.img_paths[index], self.image_size
-        )
+        img, video_height, video_width = _load_img_as_tensor(self.img_paths[index], self.image_size)
         self.video_height = video_height
         self.video_width = video_width
         # float16 precision should be sufficient for image tensor storage
@@ -442,9 +426,7 @@ class TorchCodecDecoder:
         if key < 0:
             key += self._num_frames
         if key >= self._num_frames or key < 0:
-            raise IndexError(
-                f"Index {key} is out of bounds; length is {self._num_frames}"
-            )
+            raise IndexError(f"Index {key} is out of bounds; length is {self._num_frames}")
         frame_data, *_ = core.get_frame_at_index(
             self._decoder,
             frame_index=key,
@@ -464,9 +446,7 @@ class FIFOLock:
         ident = get_ident()
         with self._condition:
             self._waiters.put(ident)
-            while self._waiters.queue[0] != ident or not self._lock.acquire(
-                blocking=False
-            ):
+            while self._waiters.queue[0] != ident or not self._lock.acquire(blocking=False):
                 self._condition.wait()
                 # got the lock and it's our turn
 
@@ -505,9 +485,7 @@ class AsyncVideoFileLoaderWithTorchCodec:
         # Check and possibly infer the output device (and also get its GPU id when applicable)
         assert gpu_device is None or gpu_device.type == "cuda"
         gpu_id = (
-            gpu_device.index
-            if gpu_device is not None and gpu_device.index is not None
-            else torch.cuda.current_device()
+            gpu_device.index if gpu_device is not None and gpu_device.index is not None else torch.cuda.current_device()
         )
         if offload_video_to_cpu:
             out_device = torch.device("cpu")
@@ -621,24 +599,23 @@ class AsyncVideoFileLoaderWithTorchCodec:
                     f"There are {self.num_frames} frames in the video, but only "
                     f"{self.num_loaded_frames} frames can be loaded successfully."
                 )
-            else:
-                self.all_frames_loaded = True
-                pbar.close()
-                with self.torchcodec_access_lock:
-                    import gc
+            self.all_frames_loaded = True
+            pbar.close()
+            with self.torchcodec_access_lock:
+                import gc
 
-                    # all frames have been loaded, so we can release the readers and free their memory
-                    # also remove pbar and thread (which shouldn't be a part of session saving)
-                    reader = self.async_reader
-                    if reader is not None:
-                        reader._source = None
-                    self.async_reader = None
-                    self.pbar = None
-                    self.thread = None
-                    self.rand_seek_idx_queue = None
-                    gc.collect()
-                # remove the lock (replace it with nullcontext) when the video is fully loaded
-                self.torchcodec_access_lock = contextlib.nullcontext()
+                # all frames have been loaded, so we can release the readers and free their memory
+                # also remove pbar and thread (which shouldn't be a part of session saving)
+                reader = self.async_reader
+                if reader is not None:
+                    reader._source = None
+                self.async_reader = None
+                self.pbar = None
+                self.thread = None
+                self.rand_seek_idx_queue = None
+                gc.collect()
+            # remove the lock (replace it with nullcontext) when the video is fully loaded
+            self.torchcodec_access_lock = contextlib.nullcontext()
 
         self.thread = Thread(target=_load_frames, daemon=True)
         self.thread.start()

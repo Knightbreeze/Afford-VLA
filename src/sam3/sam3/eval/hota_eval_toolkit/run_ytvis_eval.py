@@ -70,9 +70,7 @@ def run_ytvis_eval(args=None, gt_json=None, dt_json=None):
                 elif args[setting] == "False":
                     x = False
                 else:
-                    raise Exception(
-                        "Command line parameter " + setting + "must be True or False"
-                    )
+                    raise Exception("Command line parameter " + setting + "must be True or False")
             elif type(config[setting]) == type(1):
                 x = int(args[setting])
             elif type(args[setting]) == type(None):
@@ -81,12 +79,8 @@ def run_ytvis_eval(args=None, gt_json=None, dt_json=None):
                 x = args[setting]
             config[setting] = x
     eval_config = {k: v for k, v in config.items() if k in default_eval_config.keys()}
-    dataset_config = {
-        k: v for k, v in config.items() if k in default_dataset_config.keys()
-    }
-    metrics_config = {
-        k: v for k, v in config.items() if k in default_metrics_config.keys()
-    }
+    dataset_config = {k: v for k, v in config.items() if k in default_dataset_config.keys()}
+    metrics_config = {k: v for k, v in config.items() if k in default_metrics_config.keys()}
 
     # Run code
     evaluator = trackeval.Evaluator(eval_config)

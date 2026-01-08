@@ -21,12 +21,8 @@ class TAO_OW(_BaseDataset):
         """Default class config values"""
         code_path = utils.get_code_path()
         default_config = {
-            "GT_FOLDER": os.path.join(
-                code_path, "data/gt/tao/tao_training"
-            ),  # Location of GT data
-            "TRACKERS_FOLDER": os.path.join(
-                code_path, "data/trackers/tao/tao_training"
-            ),  # Trackers location
+            "GT_FOLDER": os.path.join(code_path, "data/gt/tao/tao_training"),  # Location of GT data
+            "TRACKERS_FOLDER": os.path.join(code_path, "data/trackers/tao/tao_training"),  # Trackers location
             "OUTPUT_FOLDER": None,  # Where to save eval results (if None, same as TRACKERS_FOLDER)
             "TRACKERS_TO_EVAL": None,  # Filenames of trackers to eval (if None, all in folder)
             "CLASSES_TO_EVAL": None,  # Classes to eval (if None, all classes)
@@ -44,9 +40,7 @@ class TAO_OW(_BaseDataset):
         """Initialise dataset, checking that all required files are present"""
         super().__init__()
         # Fill non-given config values with defaults
-        self.config = utils.init_config(
-            config, self.get_default_dataset_config(), self.get_name()
-        )
+        self.config = utils.init_config(config, self.get_default_dataset_config(), self.get_name())
         self.gt_fol = self.config["GT_FOLDER"]
         self.tracker_fol = self.config["TRACKERS_FOLDER"]
         self.should_classes_combine = True
@@ -58,13 +52,9 @@ class TAO_OW(_BaseDataset):
             self.output_fol = self.tracker_fol
         self.output_sub_fol = self.config["OUTPUT_SUB_FOLDER"]
 
-        gt_dir_files = [
-            file for file in os.listdir(self.gt_fol) if file.endswith(".json")
-        ]
+        gt_dir_files = [file for file in os.listdir(self.gt_fol) if file.endswith(".json")]
         if len(gt_dir_files) != 1:
-            raise TrackEvalException(
-                self.gt_fol + " does not contain exactly one json file."
-            )
+            raise TrackEvalException(self.gt_fol + " does not contain exactly one json file.")
 
         with open(os.path.join(self.gt_fol, gt_dir_files[0])) as f:
             self.gt_data = json.load(f)
@@ -79,16 +69,10 @@ class TAO_OW(_BaseDataset):
         self._merge_categories(self.gt_data["annotations"] + self.gt_data["tracks"])
 
         # Get sequences to eval and sequence information
-        self.seq_list = [
-            vid["name"].replace("/", "-") for vid in self.gt_data["videos"]
-        ]
-        self.seq_name_to_seq_id = {
-            vid["name"].replace("/", "-"): vid["id"] for vid in self.gt_data["videos"]
-        }
+        self.seq_list = [vid["name"].replace("/", "-") for vid in self.gt_data["videos"]]
+        self.seq_name_to_seq_id = {vid["name"].replace("/", "-"): vid["id"] for vid in self.gt_data["videos"]}
         # compute mappings from videos to annotation data
-        self.videos_to_gt_tracks, self.videos_to_gt_images = self._compute_vid_mappings(
-            self.gt_data["annotations"]
-        )
+        self.videos_to_gt_tracks, self.videos_to_gt_images = self._compute_vid_mappings(self.gt_data["annotations"])
         # compute sequence lengths
         self.seq_lengths = {vid["id"]: 0 for vid in self.gt_data["videos"]}
         for img in self.gt_data["images"]:
@@ -96,12 +80,7 @@ class TAO_OW(_BaseDataset):
         self.seq_to_images_to_timestep = self._compute_image_to_timestep_mappings()
         self.seq_to_classes = {
             vid["id"]: {
-                "pos_cat_ids": list(
-                    {
-                        track["category_id"]
-                        for track in self.videos_to_gt_tracks[vid["id"]]
-                    }
-                ),
+                "pos_cat_ids": list({track["category_id"] for track in self.videos_to_gt_tracks[vid["id"]]}),
                 "neg_cat_ids": vid["neg_category_ids"],
                 "not_exhaustively_labeled_cat_ids": vid["not_exhaustive_category_ids"],
             }
@@ -111,16 +90,10 @@ class TAO_OW(_BaseDataset):
         # Get classes to eval
         considered_vid_ids = [self.seq_name_to_seq_id[vid] for vid in self.seq_list]
         seen_cats = set(
-            [
-                cat_id
-                for vid_id in considered_vid_ids
-                for cat_id in self.seq_to_classes[vid_id]["pos_cat_ids"]
-            ]
+            [cat_id for vid_id in considered_vid_ids for cat_id in self.seq_to_classes[vid_id]["pos_cat_ids"]]
         )
         # only classes with ground truth are evaluated in TAO
-        self.valid_classes = [
-            cls["name"] for cls in self.gt_data["categories"] if cls["id"] in seen_cats
-        ]
+        self.valid_classes = [cls["name"] for cls in self.gt_data["categories"] if cls["id"] in seen_cats]
         # cls_name_to_cls_id_map = {cls['name']: cls['id'] for cls in self.gt_data['categories']}
 
         if self.config["CLASSES_TO_EVAL"]:
@@ -150,22 +123,16 @@ class TAO_OW(_BaseDataset):
         elif (self.config["TRACKERS_TO_EVAL"] is not None) and (
             len(self.config["TRACKER_DISPLAY_NAMES"]) == len(self.tracker_list)
         ):
-            self.tracker_to_disp = dict(
-                zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"])
-            )
+            self.tracker_to_disp = dict(zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"]))
         else:
-            raise TrackEvalException(
-                "List of tracker files and tracker display names do not match."
-            )
+            raise TrackEvalException("List of tracker files and tracker display names do not match.")
 
         self.tracker_data = {tracker: dict() for tracker in self.tracker_list}
 
         for tracker in self.tracker_list:
             tr_dir_files = [
                 file
-                for file in os.listdir(
-                    os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol)
-                )
+                for file in os.listdir(os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol))
                 if file.endswith(".json")
             ]
             if len(tr_dir_files) != 1:
@@ -173,11 +140,7 @@ class TAO_OW(_BaseDataset):
                     os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol)
                     + " does not contain exactly one json file."
                 )
-            with open(
-                os.path.join(
-                    self.tracker_fol, tracker, self.tracker_sub_fol, tr_dir_files[0]
-                )
-            ) as f:
+            with open(os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol, tr_dir_files[0])) as f:
                 curr_data = json.load(f)
 
             # limit detections if MAX_DETECTIONS > 0
@@ -194,9 +157,7 @@ class TAO_OW(_BaseDataset):
             self._merge_categories(curr_data)
 
             # get tracker sequence information
-            curr_videos_to_tracker_tracks, curr_videos_to_tracker_images = (
-                self._compute_vid_mappings(curr_data)
-            )
+            curr_videos_to_tracker_tracks, curr_videos_to_tracker_images = self._compute_vid_mappings(curr_data)
             self.tracker_data[tracker]["vids_to_tracks"] = curr_videos_to_tracker_tracks
             self.tracker_data[tracker]["vids_to_images"] = curr_videos_to_tracker_images
 
@@ -244,19 +205,11 @@ class TAO_OW(_BaseDataset):
             except KeyError:
                 continue
             annotations = img["annotations"]
-            raw_data["dets"][t] = np.atleast_2d(
-                [ann["bbox"] for ann in annotations]
-            ).astype(float)
-            raw_data["ids"][t] = np.atleast_1d(
-                [ann["track_id"] for ann in annotations]
-            ).astype(int)
-            raw_data["classes"][t] = np.atleast_1d([1 for _ in annotations]).astype(
-                int
-            )  # class-agnostic
+            raw_data["dets"][t] = np.atleast_2d([ann["bbox"] for ann in annotations]).astype(float)
+            raw_data["ids"][t] = np.atleast_1d([ann["track_id"] for ann in annotations]).astype(int)
+            raw_data["classes"][t] = np.atleast_1d([1 for _ in annotations]).astype(int)  # class-agnostic
             if not is_gt:
-                raw_data["tracker_confidences"][t] = np.atleast_1d(
-                    [ann["score"] for ann in annotations]
-                ).astype(float)
+                raw_data["tracker_confidences"][t] = np.atleast_1d([ann["score"] for ann in annotations]).astype(float)
 
         for t, d in enumerate(raw_data["dets"]):
             if d is None:
@@ -292,42 +245,27 @@ class TAO_OW(_BaseDataset):
         # classes_to_tracks = {cls: [track for track in all_tracks if track['category_id'] == cls]
         #                      if cls in classes_to_consider else [] for cls in all_classes}
         classes_to_tracks = {
-            cls: [track for track in all_tracks] if cls in classes_to_consider else []
-            for cls in all_classes
+            cls: [track for track in all_tracks] if cls in classes_to_consider else [] for cls in all_classes
         }  # class-agnostic
 
         # mapping from classes to track information
         raw_data["classes_to_tracks"] = {
-            cls: [
-                {
-                    det["image_id"]: np.atleast_1d(det["bbox"])
-                    for det in track["annotations"]
-                }
-                for track in tracks
-            ]
+            cls: [{det["image_id"]: np.atleast_1d(det["bbox"]) for det in track["annotations"]} for track in tracks]
             for cls, tracks in classes_to_tracks.items()
         }
         raw_data["classes_to_track_ids"] = {
-            cls: [track["id"] for track in tracks]
-            for cls, tracks in classes_to_tracks.items()
+            cls: [track["id"] for track in tracks] for cls, tracks in classes_to_tracks.items()
         }
         raw_data["classes_to_track_areas"] = {
-            cls: [track["area"] for track in tracks]
-            for cls, tracks in classes_to_tracks.items()
+            cls: [track["area"] for track in tracks] for cls, tracks in classes_to_tracks.items()
         }
         raw_data["classes_to_track_lengths"] = {
-            cls: [len(track["annotations"]) for track in tracks]
-            for cls, tracks in classes_to_tracks.items()
+            cls: [len(track["annotations"]) for track in tracks] for cls, tracks in classes_to_tracks.items()
         }
 
         if not is_gt:
             raw_data["classes_to_dt_track_scores"] = {
-                cls: np.array(
-                    [
-                        np.mean([float(x["score"]) for x in track["annotations"]])
-                        for track in tracks
-                    ]
-                )
+                cls: np.array([np.mean([float(x["score"]) for x in track["annotations"]]) for track in tracks])
                 for cls, tracks in classes_to_tracks.items()
             }
 
@@ -350,9 +288,7 @@ class TAO_OW(_BaseDataset):
 
         raw_data["num_timesteps"] = num_timesteps
         raw_data["neg_cat_ids"] = self.seq_to_classes[seq_id]["neg_cat_ids"]
-        raw_data["not_exhaustively_labeled_cls"] = self.seq_to_classes[seq_id][
-            "not_exhaustively_labeled_cat_ids"
-        ]
+        raw_data["not_exhaustively_labeled_cls"] = self.seq_to_classes[seq_id]["not_exhaustively_labeled_cat_ids"]
         raw_data["seq"] = seq
         return raw_data
 
@@ -420,9 +356,7 @@ class TAO_OW(_BaseDataset):
             tracker_ids = raw_data["tracker_ids"][t][tracker_class_mask]
             tracker_dets = raw_data["tracker_dets"][t][tracker_class_mask]
             tracker_confidences = raw_data["tracker_confidences"][t][tracker_class_mask]
-            similarity_scores = raw_data["similarity_scores"][t][gt_class_mask, :][
-                :, tracker_class_mask
-            ]
+            similarity_scores = raw_data["similarity_scores"][t][gt_class_mask, :][:, tracker_class_mask]
 
             # Match tracker and gt dets (with hungarian algorithm).
             unmatched_indices = np.arange(tracker_ids.shape[0])
@@ -430,9 +364,7 @@ class TAO_OW(_BaseDataset):
                 matching_scores = similarity_scores.copy()
                 matching_scores[matching_scores < 0.5 - np.finfo("float").eps] = 0
                 match_rows, match_cols = linear_sum_assignment(-matching_scores)
-                actually_matched_mask = (
-                    matching_scores[match_rows, match_cols] > 0 + np.finfo("float").eps
-                )
+                actually_matched_mask = matching_scores[match_rows, match_cols] > 0 + np.finfo("float").eps
                 match_cols = match_cols[actually_matched_mask]
                 unmatched_indices = np.delete(unmatched_indices, match_cols, axis=0)
 
@@ -446,9 +378,7 @@ class TAO_OW(_BaseDataset):
             # remove all unwanted unmatched tracker detections
             data["tracker_ids"][t] = np.delete(tracker_ids, to_remove_tracker, axis=0)
             data["tracker_dets"][t] = np.delete(tracker_dets, to_remove_tracker, axis=0)
-            data["tracker_confidences"][t] = np.delete(
-                tracker_confidences, to_remove_tracker, axis=0
-            )
+            data["tracker_confidences"][t] = np.delete(tracker_confidences, to_remove_tracker, axis=0)
             similarity_scores = np.delete(similarity_scores, to_remove_tracker, axis=1)
 
             data["gt_ids"][t] = gt_ids
@@ -474,9 +404,7 @@ class TAO_OW(_BaseDataset):
             tracker_id_map[unique_tracker_ids] = np.arange(len(unique_tracker_ids))
             for t in range(raw_data["num_timesteps"]):
                 if len(data["tracker_ids"][t]) > 0:
-                    data["tracker_ids"][t] = tracker_id_map[
-                        data["tracker_ids"][t]
-                    ].astype(int)
+                    data["tracker_ids"][t] = tracker_id_map[data["tracker_ids"][t]].astype(int)
 
         # Record overview statistics.
         data["num_tracker_dets"] = num_tracker_dets
@@ -501,9 +429,7 @@ class TAO_OW(_BaseDataset):
 
         # sort tracker data tracks by tracker confidence scores
         if data["dt_tracks"]:
-            idx = np.argsort(
-                [-score for score in data["dt_track_scores"]], kind="mergesort"
-            )
+            idx = np.argsort([-score for score in data["dt_track_scores"]], kind="mergesort")
             data["dt_track_scores"] = [data["dt_track_scores"][i] for i in idx]
             data["dt_tracks"] = [data["dt_tracks"][i] for i in idx]
             data["dt_track_ids"] = [data["dt_track_ids"][i] for i in idx]
@@ -596,9 +522,7 @@ class TAO_OW(_BaseDataset):
                     key=lambda x: images[x["image_id"]]["frame_index"],
                 )
                 # Computer average area
-                track["area"] = sum(x["area"] for x in track["annotations"]) / len(
-                    track["annotations"]
-                )
+                track["area"] = sum(x["area"] for x in track["annotations"]) / len(track["annotations"])
 
         # Ensure all videos are present
         for vid_id in vid_ids:
@@ -622,9 +546,7 @@ class TAO_OW(_BaseDataset):
         for vid in seq_to_imgs_to_timestep:
             curr_imgs = [img["id"] for img in self.videos_to_gt_images[vid]]
             curr_imgs = sorted(curr_imgs, key=lambda x: images[x]["frame_index"])
-            seq_to_imgs_to_timestep[vid] = {
-                curr_imgs[i]: i for i in range(len(curr_imgs))
-            }
+            seq_to_imgs_to_timestep[vid] = {curr_imgs[i]: i for i in range(len(curr_imgs))}
 
         return seq_to_imgs_to_timestep
 
@@ -656,9 +578,7 @@ class TAO_OW(_BaseDataset):
         """
         missing_video_id = [x for x in annotations if "video_id" not in x]
         if missing_video_id:
-            image_id_to_video_id = {
-                x["id"]: x["video_id"] for x in self.gt_data["images"]
-            }
+            image_id_to_video_id = {x["id"]: x["video_id"] for x in self.gt_data["images"]}
             for x in missing_video_id:
                 x["video_id"] = image_id_to_video_id[x["image_id"]]
 
@@ -694,9 +614,7 @@ class TAO_OW(_BaseDataset):
         return len(track_ids_to_update)
 
     def _split_known_unknown_distractor(self):
-        all_ids = set(
-            [i for i in range(1, 2000)]
-        )  # 2000 is larger than the max category id in TAO-OW.
+        all_ids = set([i for i in range(1, 2000)])  # 2000 is larger than the max category id in TAO-OW.
         # `knowns` includes 78 TAO_category_ids that corresponds to 78 COCO classes.
         # (The other 2 COCO classes do not have corresponding classes in TAO).
         self.knowns = {
@@ -863,16 +781,12 @@ class TAO_OW(_BaseDataset):
 
         filtered["annotations"] = list()
         for ann in raw_gt_data["annotations"]:
-            if (ann["video_id"] not in unwanted_vid) and (
-                ann["category_id"] in valid_cat_ids
-            ):
+            if (ann["video_id"] not in unwanted_vid) and (ann["category_id"] in valid_cat_ids):
                 filtered["annotations"].append(ann)
 
         filtered["tracks"] = list()
         for track in raw_gt_data["tracks"]:
-            if (track["video_id"] not in unwanted_vid) and (
-                track["category_id"] in valid_cat_ids
-            ):
+            if (track["video_id"] not in unwanted_vid) and (track["category_id"] in valid_cat_ids):
                 filtered["tracks"].append(track)
 
         filtered["images"] = list()

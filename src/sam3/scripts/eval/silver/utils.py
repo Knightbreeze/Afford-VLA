@@ -1,19 +1,14 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 import json
 import os
+from pathlib import Path
 import shutil
 import subprocess
-from io import BytesIO
-from pathlib import Path
 
 import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-import yaml
 from PIL import Image
-from pycocotools import mask as mask_utils
 from tqdm import tqdm
-
+import yaml
 
 annotation_files = {
     "droid": [
@@ -32,12 +27,12 @@ annotation_files = {
 
 
 def load_yaml(filename):
-    with open(filename, "r") as f:
+    with open(filename) as f:
         return yaml.safe_load(f)
 
 
 def load_json(filename):
-    with open(filename, "r") as f:
+    with open(filename) as f:
         return json.load(f)
 
 
@@ -48,7 +43,7 @@ def save_json(content, filename):
 
 def run_command(cmd):
     """Run a shell command and raise if it fails."""
-    result = subprocess.run(cmd, shell=True)
+    result = subprocess.run(cmd, shell=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(f"Command failed: {cmd}")
 
@@ -83,9 +78,7 @@ def get_frame_from_video(video_path, frame_id):
             if i == frame_id:
                 img = frame.to_ndarray(format="rgb24")
                 return img
-        raise ValueError(
-            f"Could not read frame {frame_id} from video {video_path} (out of frame)"
-        )
+        raise ValueError(f"Could not read frame {frame_id} from video {video_path} (out of frame)")
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame_rgb
 

@@ -9,14 +9,14 @@ import warnings
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.transforms import Normalize, Resize, ToTensor
+from torchvision.transforms import Normalize
+from torchvision.transforms import Resize
+from torchvision.transforms import ToTensor
 
 
 # Adapted from https://github.com/facebookresearch/sam2/blob/main/sam2/utils/transforms.py
 class SAM2Transforms(nn.Module):
-    def __init__(
-        self, resolution, mask_threshold, max_hole_area=0.0, max_sprinkle_area=0.0
-    ):
+    def __init__(self, resolution, mask_threshold, max_hole_area=0.0, max_sprinkle_area=0.0):
         """
         Transforms for SAM2.
         """
@@ -44,9 +44,7 @@ class SAM2Transforms(nn.Module):
         img_batch = torch.stack(img_batch, dim=0)
         return img_batch
 
-    def transform_coords(
-        self, coords: torch.Tensor, normalize=False, orig_hw=None
-    ) -> torch.Tensor:
+    def transform_coords(self, coords: torch.Tensor, normalize=False, orig_hw=None) -> torch.Tensor:
         """
         Expects a torch tensor with length 2 in the last dimension. The coordinates can be in absolute image or normalized coordinates,
         If the coords are in absolute image coordinates, normalize should be set to True and original image size is required.
@@ -64,9 +62,7 @@ class SAM2Transforms(nn.Module):
         coords = coords * self.resolution  # unnormalize coords
         return coords
 
-    def transform_boxes(
-        self, boxes: torch.Tensor, normalize=False, orig_hw=None
-    ) -> torch.Tensor:
+    def transform_boxes(self, boxes: torch.Tensor, normalize=False, orig_hw=None) -> torch.Tensor:
         """
         Expects a tensor of shape Bx4. The coordinates can be in absolute image or normalized coordinates,
         if the coords are in absolute image coordinates, normalize should be set to True and original image size is required.
@@ -87,18 +83,14 @@ class SAM2Transforms(nn.Module):
             if self.max_hole_area > 0:
                 # Holes are those connected components in background with area <= self.fill_hole_area
                 # (background regions are those with mask scores <= self.mask_threshold)
-                labels, areas = connected_components(
-                    (mask_flat <= self.mask_threshold).to(torch.uint8)
-                )
+                labels, areas = connected_components((mask_flat <= self.mask_threshold).to(torch.uint8))
                 is_hole = (labels > 0) & (areas <= self.max_hole_area)
                 is_hole = is_hole.reshape_as(masks)
                 # We fill holes with a small positive mask score (10.0) to change them to foreground.
                 masks = torch.where(is_hole, self.mask_threshold + 10.0, masks)
 
             if self.max_sprinkle_area > 0:
-                labels, areas = connected_components(
-                    (mask_flat > self.mask_threshold).to(torch.uint8)
-                )
+                labels, areas = connected_components((mask_flat > self.mask_threshold).to(torch.uint8))
                 is_hole = (labels > 0) & (areas <= self.max_sprinkle_area)
                 is_hole = is_hole.reshape_as(masks)
                 # We fill holes with negative mask score (-10.0) to change them to background.

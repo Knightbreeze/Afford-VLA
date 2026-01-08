@@ -1,7 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 import math
-from typing import Optional
 
 import torch
 from torch import nn
@@ -18,8 +17,8 @@ class PositionEmbeddingSine(nn.Module):
         num_pos_feats,
         temperature: int = 10000,
         normalize: bool = True,
-        scale: Optional[float] = None,
-        precompute_resolution: Optional[int] = None,
+        scale: float | None = None,
+        precompute_resolution: int | None = None,
     ):
         super().__init__()
         assert num_pos_feats % 2 == 0, "Expecting even model width"
@@ -60,12 +59,8 @@ class PositionEmbeddingSine(nn.Module):
 
         pos_x = x_embed[:, None] / dim_t
         pos_y = y_embed[:, None] / dim_t
-        pos_x = torch.stack(
-            (pos_x[:, 0::2].sin(), pos_x[:, 1::2].cos()), dim=2
-        ).flatten(1)
-        pos_y = torch.stack(
-            (pos_y[:, 0::2].sin(), pos_y[:, 1::2].cos()), dim=2
-        ).flatten(1)
+        pos_x = torch.stack((pos_x[:, 0::2].sin(), pos_x[:, 1::2].cos()), dim=2).flatten(1)
+        pos_y = torch.stack((pos_y[:, 0::2].sin(), pos_y[:, 1::2].cos()), dim=2).flatten(1)
         return pos_x, pos_y
 
     @torch.no_grad()
@@ -112,12 +107,8 @@ class PositionEmbeddingSine(nn.Module):
 
         pos_x = x_embed[:, :, :, None] / dim_t
         pos_y = y_embed[:, :, :, None] / dim_t
-        pos_x = torch.stack(
-            (pos_x[:, :, :, 0::2].sin(), pos_x[:, :, :, 1::2].cos()), dim=4
-        ).flatten(3)
-        pos_y = torch.stack(
-            (pos_y[:, :, :, 0::2].sin(), pos_y[:, :, :, 1::2].cos()), dim=4
-        ).flatten(3)
+        pos_x = torch.stack((pos_x[:, :, :, 0::2].sin(), pos_x[:, :, :, 1::2].cos()), dim=4).flatten(3)
+        pos_y = torch.stack((pos_y[:, :, :, 0::2].sin(), pos_y[:, :, :, 1::2].cos()), dim=4).flatten(3)
         pos = torch.cat((pos_y, pos_x), dim=3).permute(0, 3, 1, 2)
         if cache_key is not None:
             self.cache[cache_key] = pos[0]

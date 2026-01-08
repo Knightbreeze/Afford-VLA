@@ -1,7 +1,7 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 from collections import OrderedDict
-from typing import Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
 
 import torch
 import torch.nn as nn
@@ -16,7 +16,7 @@ class ResidualAttentionBlock(nn.Module):
         d_model: int,
         n_head: int,
         mlp_ratio: float = 4.0,
-        ls_init_value: Optional[float] = None,
+        ls_init_value: float | None = None,
         act_layer: Callable[[], nn.Module] = nn.GELU,
         norm_layer: Callable[[int], nn.Module] = nn.LayerNorm,
     ):
@@ -28,16 +28,8 @@ class ResidualAttentionBlock(nn.Module):
         self.ln_1 = norm_layer(d_model)
         self.ln_2 = norm_layer(d_model)
 
-        self.ls_1 = (
-            LayerScale(d_model, ls_init_value)
-            if ls_init_value is not None
-            else nn.Identity()
-        )
-        self.ls_2 = (
-            LayerScale(d_model, ls_init_value)
-            if ls_init_value is not None
-            else nn.Identity()
-        )
+        self.ls_1 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
+        self.ls_2 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
 
         # MLP
         mlp_width = int(d_model * mlp_ratio)
@@ -54,15 +46,15 @@ class ResidualAttentionBlock(nn.Module):
     def attention(
         self,
         q_x: torch.Tensor,
-        k_x: Optional[torch.Tensor] = None,
-        v_x: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        k_x: torch.Tensor | None = None,
+        v_x: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         k_x = k_x if k_x is not None else q_x
         v_x = v_x if v_x is not None else q_x
         if attn_mask is not None:
             # Leave boolean masks as is
-            if not attn_mask.dtype == torch.bool:
+            if attn_mask.dtype != torch.bool:
                 attn_mask = attn_mask.to(q_x.dtype)
 
         return self.attn(q_x, k_x, v_x, need_weights=False, attn_mask=attn_mask)[0]
@@ -70,19 +62,13 @@ class ResidualAttentionBlock(nn.Module):
     def forward(
         self,
         q_x: torch.Tensor,
-        k_x: Optional[torch.Tensor] = None,
-        v_x: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        k_x: torch.Tensor | None = None,
+        v_x: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        k_x = (
-            self.ln_1_kv(k_x) if hasattr(self, "ln_1_kv") and k_x is not None else None
-        )
-        v_x = (
-            self.ln_1_kv(v_x) if hasattr(self, "ln_1_kv") and v_x is not None else None
-        )
-        x = q_x + self.ls_1(
-            self.attention(q_x=self.ln_1(q_x), k_x=k_x, v_x=v_x, attn_mask=attn_mask)
-        )
+        k_x = self.ln_1_kv(k_x) if hasattr(self, "ln_1_kv") and k_x is not None else None
+        v_x = self.ln_1_kv(v_x) if hasattr(self, "ln_1_kv") and v_x is not None else None
+        x = q_x + self.ls_1(self.attention(q_x=self.ln_1(q_x), k_x=k_x, v_x=v_x, attn_mask=attn_mask))
         x = x + self.ls_2(self.mlp(self.ln_2(x)))
         return x
 
@@ -94,10 +80,10 @@ class Transformer(nn.Module):
         layers: int,
         heads: int,
         mlp_ratio: float = 4.0,
-        ls_init_value: Optional[float] = None,
+        ls_init_value: float | None = None,
         act_layer: Callable[[], nn.Module] = nn.GELU,
         norm_layer: Callable[[int], nn.Module] = nn.LayerNorm,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         use_act_checkpoint: bool = False,
     ):
         super().__init__()
@@ -119,23 +105,17 @@ class Transformer(nn.Module):
         )
 
         if compile_mode is not None:
-            self.forward = torch.compile(
-                self.forward, mode=compile_mode, fullgraph=True
-            )
+            self.forward = torch.compile(self.forward, mode=compile_mode, fullgraph=True)
             if self.grad_checkpointing:
                 torch._dynamo.config.optimize_ddp = False
 
     def forward(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         for _, r in enumerate(self.resblocks):
-            if (
-                self.grad_checkpointing
-                and not torch.jit.is_scripting()
-                and self.training
-            ):
+            if self.grad_checkpointing and not torch.jit.is_scripting() and self.training:
                 x = checkpoint(r, x, None, None, attn_mask, use_reentrant=False)
             else:
                 x = r(
@@ -146,8 +126,8 @@ class Transformer(nn.Module):
 
 
 def text_global_pool(
-    x: torch.Tensor, text: Optional[torch.Tensor] = None, pool_type: str = "argmax"
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    x: torch.Tensor, text: torch.Tensor | None = None, pool_type: str = "argmax"
+) -> tuple[torch.Tensor, torch.Tensor]:
     if pool_type == "first":
         pooled, tokens = x[:, 0], x[:, 1:]
     elif pool_type == "last":
@@ -170,7 +150,7 @@ class TextTransformer(nn.Module):
         heads: int = 8,
         layers: int = 12,
         mlp_ratio: float = 4.0,
-        ls_init_value: Optional[float] = None,
+        ls_init_value: float | None = None,
         output_dim: int = 512,
         no_causal_mask: bool = False,
         pool_type: str = "none",  # no pooling
@@ -179,7 +159,7 @@ class TextTransformer(nn.Module):
         norm_layer: Callable = nn.LayerNorm,
         output_tokens: bool = False,
         use_ln_post: bool = True,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         use_act_checkpoint: bool = False,
     ):
         super().__init__()
@@ -209,9 +189,7 @@ class TextTransformer(nn.Module):
         if no_causal_mask:
             self.attn_mask = None
         else:
-            self.register_buffer(
-                "attn_mask", self.build_causal_mask(), persistent=False
-            )
+            self.register_buffer("attn_mask", self.build_causal_mask(), persistent=False)
         if proj_bias:
             self.text_projection = nn.Linear(width, output_dim)
         else:
@@ -225,9 +203,7 @@ class TextTransformer(nn.Module):
         mask.triu_(1)  # zero out the lower diagonal
         return mask
 
-    def forward(
-        self, text: torch.Tensor
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def forward(self, text: torch.Tensor) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         seq_len = text.shape[1]
         x = self.token_embedding(text)  # [batch_size, n_ctx, d_model]
 
@@ -261,7 +237,7 @@ class VETextEncoder(nn.Module):
         context_length: int = 32,
         vocab_size: int = 49408,
         use_ln_post: bool = True,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         use_act_checkpoint: bool = True,
     ):
         super().__init__()
@@ -285,24 +261,20 @@ class VETextEncoder(nn.Module):
 
     def forward(
         self,
-        text: Union[List[str], Tuple[torch.Tensor, torch.Tensor, dict]],
-        input_boxes: Optional[List] = None,
+        text: list[str] | tuple[torch.Tensor, torch.Tensor, dict],
+        input_boxes: list | None = None,
         device: torch.device = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if isinstance(text[0], str):
             # no use case for this
             assert input_boxes is None or len(input_boxes) == 0, "not supported"
 
             # Encode the text
-            tokenized = self.tokenizer(text, context_length=self.context_length).to(
-                device
-            )  # [b, seq_len]
+            tokenized = self.tokenizer(text, context_length=self.context_length).to(device)  # [b, seq_len]
             text_attention_mask = (tokenized != 0).bool()
 
             # manually embed the tokens
-            inputs_embeds = self.encoder.token_embedding(
-                tokenized
-            )  # [b, seq_len, d=1024]
+            inputs_embeds = self.encoder.token_embedding(tokenized)  # [b, seq_len, d=1024]
             _, text_memory = self.encoder(tokenized)  # [b, seq_len, d=1024]
 
             assert text_memory.shape[1] == inputs_embeds.shape[1]
@@ -316,9 +288,7 @@ class VETextEncoder(nn.Module):
             # The text is already encoded, use as is.
             text_attention_mask, text_memory_resized, tokenized = text
             inputs_embeds = tokenized["inputs_embeds"]
-            assert (
-                input_boxes is None or len(input_boxes) == 0
-            ), "Can't replace boxes in text if it's already encoded"
+            assert input_boxes is None or len(input_boxes) == 0, "Can't replace boxes in text if it's already encoded"
 
         # Note that the input_embeds are returned in pytorch's convention (sequence first)
         return (

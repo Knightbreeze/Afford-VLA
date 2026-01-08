@@ -6,7 +6,6 @@ import os
 
 import pandas as pd
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,9 +39,7 @@ def update_yt1b_annot_per_field(data, field, id_col, available_ids):
     new_field_data = []
     for data_entry in field_data:
         if data_entry[id_col] not in available_ids:
-            logger.info(
-                f"{field}: Removing {data_entry} due to the video being unavailable."
-            )
+            logger.info(f"{field}: Removing {data_entry} due to the video being unavailable.")
             continue
         new_field_data.append(data_entry)
 
@@ -54,7 +51,7 @@ def update_yt1b_annot_per_field(data, field, id_col, available_ids):
 
 
 def update_yt1b_annot(yt1b_input_annot_path, yt1b_media_dir, yt1b_output_annot_path):
-    with open(yt1b_input_annot_path, "r") as f:
+    with open(yt1b_input_annot_path) as f:
         data = json.load(f)
 
     available_saco_yt1b_ids = get_available_saco_yt1b_ids(yt1b_media_dir, data)

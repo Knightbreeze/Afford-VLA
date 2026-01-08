@@ -41,12 +41,12 @@ import tqdm
 import wandb
 
 import openpi.models.pi0_config
-from openpi.models_pytorch import pi0_pytorch, pi0_aff_pytorch, projectors
-from src.sam3.sam3.model_builder import build_sam3_image_model
-from src.sam3.sam3.model.sam3_image_processor_aff_memory import Sam3AffProcessor
+from openpi.models_pytorch import projectors
 import openpi.shared.normalize as _normalize
 import openpi.training.config as _config
 import openpi.training.data_loader as _data
+from src.sam3.sam3.model.sam3_image_processor_aff_memory import Sam3AffProcessor
+from src.sam3.sam3.model_builder import build_sam3_image_model
 
 
 def init_logging():
@@ -168,11 +168,15 @@ def save_checkpoint(model, align_projector, optimizer, global_step, config, is_m
         # Save model state using safetensors (handle shared tensors)
         model_to_save = model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model
         safetensors.torch.save_model(model_to_save, tmp_ckpt_dir / "model.safetensors")
-        
+
         # 额外保存 align_projector
-        projector_to_save = align_projector.module if isinstance(align_projector, torch.nn.parallel.DistributedDataParallel) else align_projector
+        projector_to_save = (
+            align_projector.module
+            if isinstance(align_projector, torch.nn.parallel.DistributedDataParallel)
+            else align_projector
+        )
         safetensors.torch.save_model(projector_to_save, tmp_ckpt_dir / "align_projector.safetensors")
-        
+
         # Save optimizer state using PyTorch format
         torch.save(optimizer.state_dict(), tmp_ckpt_dir / "optimizer.pt")
 
@@ -224,7 +228,7 @@ def load_checkpoint(model, align_projector, optimizer, checkpoint_dir, device):
     try:
         # Load model state with error handling
         logging.info("Loading model state...")
-        
+
         # Resume from safetensors format
         safetensors_path = ckpt_dir / "model.safetensors"
         if safetensors_path.exists():
@@ -237,7 +241,11 @@ def load_checkpoint(model, align_projector, optimizer, checkpoint_dir, device):
         # 加载 align_projector
         projector_path = ckpt_dir / "align_projector.safetensors"
         if projector_path.exists():
-            projector_to_load = align_projector.module if isinstance(align_projector, torch.nn.parallel.DistributedDataParallel) else align_projector
+            projector_to_load = (
+                align_projector.module
+                if isinstance(align_projector, torch.nn.parallel.DistributedDataParallel)
+                else align_projector
+            )
             safetensors.torch.load_model(projector_to_load, projector_path, device=str(device))
         else:
             raise FileNotFoundError(f"No align_projector checkpoint found at {ckpt_dir}")
@@ -427,19 +435,12 @@ def train_loop(config: _config.TrainConfig):
 
     # Sam3AffProcessor
     aff_processor = Sam3AffProcessor(
-        model=aff_model,
-        resolution=getattr(config, "aff_resolution", 1008),
-        device=device,
-        confidence_threshold=0.5
+        model=aff_model, resolution=getattr(config, "aff_resolution", 1008), device=device, confidence_threshold=0.5
     )
     logging.info(f"Initialized Sam3AffProcessor with resolution {getattr(config, 'aff_resolution', 1008)}")
 
     # alignment projector
-    align_projector = projectors.MLPAlignProjector(
-        model.LLM_width,
-        config.aff_dim,
-        config.use_vlm_norm
-    ).to(device)
+    align_projector = projectors.MLPAlignProjector(model.LLM_width, config.aff_dim, config.use_vlm_norm).to(device)
 
     model = openpi.models_pytorch.pi0_aff_pytorch.PI0Pytorch(model_cfg, config).to(device)
 
@@ -460,7 +461,6 @@ def train_loop(config: _config.TrainConfig):
         align_projector.gradient_checkpointing_enable()
     else:
         logging.info("Gradient checkpointing is not supported for align projector")
-    
 
     # Log initial memory usage after model creation
     if is_main and torch.cuda.is_available():
@@ -474,7 +474,6 @@ def train_loop(config: _config.TrainConfig):
         # Set memory allocation configuration
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128,expandable_segments:True"
         logging.info("Enabled memory optimizations for 8+ GPU training")
-
 
     if use_ddp:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -525,7 +524,7 @@ def train_loop(config: _config.TrainConfig):
     def lr_schedule(step: int):
         if step < warmup_steps:
             # Match JAX behavior: start from peak_lr / (warmup_steps + 1)
-            init_lr = peak_lr / (warmup_steps + 1)                                                                                                                             
+            init_lr = peak_lr / (warmup_steps + 1)
             return init_lr + (peak_lr - init_lr) * step / warmup_steps
         # cosine decay
         progress = min(1.0, (step - warmup_steps) / max(1, decay_steps - warmup_steps))
@@ -554,8 +553,7 @@ def train_loop(config: _config.TrainConfig):
         )
         logging.info("EMA is not supported for PyTorch training")
         logging.info(f"Training precision: {model_cfg.dtype}")
-    
-    
+
     # Training loop - iterate until we reach num_train_steps
     pbar = (
         tqdm.tqdm(total=config.num_train_steps, initial=global_step, desc="Training", disable=not is_main)
@@ -567,14 +565,13 @@ def train_loop(config: _config.TrainConfig):
         # Set epoch for distributed training
         if use_ddp and hasattr(loader, "set_epoch"):
             loader.set_epoch(global_step // len(loader))
-        
+
         # 每次迭代时，加载数据
         # 1. DataLoader 从磁盘读取一个 batch 的样本索引
         # 2. 调用 dataset.__getitem__(index) 加载数据
         # 3. 调用 _collate_fn 组装 batch
         # 4. 返回 (observation, actions)
-        for result in loader: 
-
+        for result in loader:
             # Check if we've reached the target number of steps
             if global_step >= config.num_train_steps:
                 break
@@ -584,10 +581,10 @@ def train_loop(config: _config.TrainConfig):
             else:
                 observation, actions = result
                 aff_prompts = None
-            
+
             observation = jax.tree.map(lambda x: x.to(device), observation)
-            actions = actions.to(torch.float32)  # noqa: PLW2901
-            actions = actions.to(device)  # noqa: PLW2901
+            actions = actions.to(torch.float32)
+            actions = actions.to(device)
 
             # Update LR
             for pg in optim.param_groups:
@@ -595,13 +592,9 @@ def train_loop(config: _config.TrainConfig):
 
             # Forward pass
             action_losses, align_loss = model(
-                observation, 
-                actions,
-                aff_prompts,
-                aff_processor=aff_processor,
-                align_proj=align_projector
+                observation, actions, aff_prompts, aff_processor=aff_processor, align_proj=align_projector
             )
-            
+
             # Ensure losses is a tensor and handle different return types
             if isinstance(action_losses, list | tuple):
                 action_losses = torch.stack(action_losses)
@@ -690,7 +683,13 @@ def train_loop(config: _config.TrainConfig):
             if pbar is not None:
                 pbar.update(1)
                 pbar.set_postfix(
-                    {"action_loss": f"{action_losses.item():.4f}", "align_loss": f"{align_loss.item():.4f}","loss": f"{loss.item():.4f}", "lr": f"{optim.param_groups[0]['lr']:.2e}", "step": global_step}
+                    {
+                        "action_loss": f"{action_losses.item():.4f}",
+                        "align_loss": f"{align_loss.item():.4f}",
+                        "loss": f"{loss.item():.4f}",
+                        "lr": f"{optim.param_groups[0]['lr']:.2e}",
+                        "step": global_step,
+                    }
                 )
 
     # Close progress bar

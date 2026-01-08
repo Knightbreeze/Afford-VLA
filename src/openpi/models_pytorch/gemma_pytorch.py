@@ -284,8 +284,7 @@ class PaliGemmaWithExpertModel(nn.Module):
             prefix_output = outputs_embeds[0]
             suffix_output = outputs_embeds[1]
             prefix_past_key_values = None
-        
+
         if output_hidden_states:
             return [prefix_output, suffix_output], prefix_past_key_values, all_hidden_states
-        else:
-            return [prefix_output, suffix_output], prefix_past_key_values
+        return [prefix_output, suffix_output], prefix_past_key_values

@@ -42,9 +42,7 @@ def update_config(config):
                 elif args[setting] == "False":
                     x = False
                 else:
-                    raise Exception(
-                        "Command line parameter " + setting + "must be True or False"
-                    )
+                    raise Exception("Command line parameter " + setting + "must be True or False")
             elif type(config[setting]) == type(1):
                 x = int(args[setting])
             elif type(args[setting]) == type(None):
@@ -67,17 +65,13 @@ def validate_metrics_list(metrics_list):
     metric_names = [metric.get_name() for metric in metrics_list]
     # check metric names are unique
     if len(metric_names) != len(set(metric_names)):
-        raise TrackEvalException(
-            "Code being run with multiple metrics of the same name"
-        )
+        raise TrackEvalException("Code being run with multiple metrics of the same name")
     fields = []
     for m in metrics_list:
         fields += m.fields
     # check metric fields are unique
     if len(fields) != len(set(fields)):
-        raise TrackEvalException(
-            "Code being run with multiple metrics with fields of the same name"
-        )
+        raise TrackEvalException("Code being run with multiple metrics with fields of the same name")
     return metric_names
 
 
@@ -132,9 +126,7 @@ def write_summary_results(summaries, cls, output_folder):
         "IDs",
         "GT_IDs",
     ]
-    default_ordered_dict = OrderedDict(
-        zip(default_order, [None for _ in default_order])
-    )
+    default_ordered_dict = OrderedDict(zip(default_order, [None for _ in default_order]))
     for f, v in zip(fields, values):
         default_ordered_dict[f] = v
     for df in default_order:
@@ -164,9 +156,7 @@ def write_detailed_results(details, cls, output_folder):
             if seq == "COMBINED_SEQ":
                 continue
             writer.writerow([seq] + sum([list(s[seq].values()) for s in details], []))
-        writer.writerow(
-            ["COMBINED"] + sum([list(s["COMBINED_SEQ"].values()) for s in details], [])
-        )
+        writer.writerow(["COMBINED"] + sum([list(s["COMBINED_SEQ"].values()) for s in details], []))
 
 
 def load_detail(file):

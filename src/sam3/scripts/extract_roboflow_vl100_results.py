@@ -10,11 +10,10 @@ metrics and training parameters for analysis and comparison.
 import argparse
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pandas as pd
 import yaml
-
 
 # Constants
 CONFIG_FILENAME = "config_resolved.yaml"
@@ -140,7 +139,7 @@ ROBOFLOW_CATEGORIES = {
 }
 
 
-def load_jsonl_last_row(file_path: str, keys: List[str]) -> Optional[Dict[str, Any]]:
+def load_jsonl_last_row(file_path: str, keys: list[str]) -> dict[str, Any] | None:
     """
     Load the last row from a JSONL file and extract specific keys.
 
@@ -157,7 +156,7 @@ def load_jsonl_last_row(file_path: str, keys: List[str]) -> Optional[Dict[str, A
 
     last_row = None
     try:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             for line in file:
                 last_row = json.loads(line.strip())
 
@@ -175,7 +174,7 @@ def load_jsonl_last_row(file_path: str, keys: List[str]) -> Optional[Dict[str, A
         return None
 
 
-def find_config_files(directory: str, filename: str = CONFIG_FILENAME) -> List[str]:
+def find_config_files(directory: str, filename: str = CONFIG_FILENAME) -> list[str]:
     """
     Recursively find configuration files with a specific filename.
 
@@ -196,7 +195,7 @@ def find_config_files(directory: str, filename: str = CONFIG_FILENAME) -> List[s
     return matching_files
 
 
-def extract_config_parameters(config_path: str, keys: List[str]) -> Dict[str, Any]:
+def extract_config_parameters(config_path: str, keys: list[str]) -> dict[str, Any]:
     """
     Extract specific parameters from a YAML configuration file.
 
@@ -208,7 +207,7 @@ def extract_config_parameters(config_path: str, keys: List[str]) -> Dict[str, An
         Dictionary containing extracted parameters
     """
     try:
-        with open(config_path, "r") as file:
+        with open(config_path) as file:
             data = yaml.safe_load(file)
 
         # Extract parameters from scratch section
@@ -216,9 +215,7 @@ def extract_config_parameters(config_path: str, keys: List[str]) -> Dict[str, An
 
         # Add computed parameters
         launcher = data.get("launcher", {})
-        scratch_params["batch_size"] = int(launcher.get("gpus_per_node", 1)) * int(
-            launcher.get("num_nodes", 1)
-        )
+        scratch_params["batch_size"] = int(launcher.get("gpus_per_node", 1)) * int(launcher.get("num_nodes", 1))
         scratch_params["lr_scale"] = data["scratch"].get("lr_scale")
 
         roboflow_train = data.get("roboflow_train", {})
@@ -231,7 +228,7 @@ def extract_config_parameters(config_path: str, keys: List[str]) -> Dict[str, An
         return {}
 
 
-def calculate_average(values_dict: Dict[str, float]) -> float:
+def calculate_average(values_dict: dict[str, float]) -> float:
     """
     Calculate the average of values in a dictionary.
 
@@ -246,7 +243,7 @@ def calculate_average(values_dict: Dict[str, float]) -> float:
     return sum(values_dict.values()) / len(values_dict)
 
 
-def extract_category_results(log_dir: str, categories: List[str]) -> Dict[str, float]:
+def extract_category_results(log_dir: str, categories: list[str]) -> dict[str, float]:
     """
     Extract bbox AP results for specific categories from log files.
 
@@ -302,14 +299,10 @@ def analyze_experiment_results(config_path: str) -> None:
     all_scores = []
 
     for super_category, categories in ROBOFLOW_CATEGORIES.items():
-        category_results[super_category] = extract_category_results(
-            experiment_dir, categories
-        )
+        category_results[super_category] = extract_category_results(experiment_dir, categories)
 
         if category_results[super_category]:
-            category_averages[super_category] = calculate_average(
-                category_results[super_category]
-            )
+            category_averages[super_category] = calculate_average(category_results[super_category])
             all_scores.extend(category_results[super_category].values())
 
     # Print results summary
@@ -318,14 +311,14 @@ def analyze_experiment_results(config_path: str) -> None:
         num_categories = len(category_results[super_category])
         print(f"  {super_category}: {avg_score:.4f} (n={num_categories})")
 
-    print(f"\nOverall Results:")
+    print("\nOverall Results:")
     print(f"  Weighted average: {calculate_average(category_averages):.4f}")
     print(f"  Total categories: {len(all_scores)}")
     print(f"  True average: {sum(all_scores) / len(all_scores):.4f}")
     print()
 
 
-def print_results_table(results_data: List[Dict[str, Any]]) -> None:
+def print_results_table(results_data: list[dict[str, Any]]) -> None:
     """
     Print results in a formatted table.
 
@@ -344,9 +337,7 @@ def print_results_table(results_data: List[Dict[str, Any]]) -> None:
 
 def main() -> None:
     """Main function to orchestrate the results extraction and analysis."""
-    parser = argparse.ArgumentParser(
-        description="Extract and analyze Roboflow VL100 training results"
-    )
+    parser = argparse.ArgumentParser(description="Extract and analyze Roboflow VL100 training results")
     parser.add_argument(
         "-p",
         "--path",

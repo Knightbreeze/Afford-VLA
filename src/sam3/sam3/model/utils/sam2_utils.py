@@ -8,8 +8,8 @@ import os
 from threading import Thread
 
 import numpy as np
-import torch
 from PIL import Image
+import torch
 from tqdm import tqdm
 
 
@@ -76,9 +76,7 @@ class AsyncVideoFrameLoader:
         if img is not None:
             return img
 
-        img, video_height, video_width = _load_img_as_tensor(
-            self.img_paths[index], self.image_size
-        )
+        img, video_height, video_width = _load_img_as_tensor(self.img_paths[index], self.image_size)
         self.video_height = video_height
         self.video_width = video_width
         # normalize by mean and std
@@ -118,7 +116,7 @@ def load_video_frames(
             img_std=img_std,
             compute_device=compute_device,
         )
-    elif is_str and os.path.isdir(video_path):
+    if is_str and os.path.isdir(video_path):
         return load_video_frames_from_jpg_images(
             video_path=video_path,
             image_size=image_size,
@@ -128,10 +126,7 @@ def load_video_frames(
             async_loading_frames=async_loading_frames,
             compute_device=compute_device,
         )
-    else:
-        raise NotImplementedError(
-            "Only MP4 video and JPEG folder are supported at this moment"
-        )
+    raise NotImplementedError("Only MP4 video and JPEG folder are supported at this moment")
 
 
 def load_video_frames_from_jpg_images(
@@ -164,11 +159,7 @@ def load_video_frames_from_jpg_images(
             "ffmpeg to start the JPEG file from 00000.jpg."
         )
 
-    frame_names = [
-        p
-        for p in os.listdir(jpg_folder)
-        if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]
-    ]
+    frame_names = [p for p in os.listdir(jpg_folder) if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]]
     frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
     num_frames = len(frame_names)
     if num_frames == 0:

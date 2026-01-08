@@ -1,23 +1,19 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 import ast
 import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 import os
-import shutil
+from pathlib import Path
 import subprocess
 import sys
-from concurrent.futures import as_completed, ThreadPoolExecutor
-from pathlib import Path
 
+from utils import annotation_files
+from utils import config
+from utils import load_json
+from utils import run_command
+from utils import update_annotations
 import yt_dlp
-
-from utils import (
-    annotation_files,
-    config,
-    load_json,
-    run_command,
-    save_json,
-    update_annotations,
-)
 
 
 def construct_gcs_path(original_video):
@@ -37,8 +33,7 @@ def construct_gcs_path(original_video):
     mp4 = parts[-2]
     file_id = parts[-1].split(".")[0]
     gcs_path = (
-        f"gs://gresearch/robotics/droid_raw/1.0.1/"
-        f"{lab}/{failure}/{date}/{time}/{recordings}/{mp4}/{file_id}.mp4"
+        f"gs://gresearch/robotics/droid_raw/1.0.1/" f"{lab}/{failure}/{date}/{time}/{recordings}/{mp4}/{file_id}.mp4"
     )
     return gcs_path
 
@@ -63,9 +58,7 @@ def download_video(args):
 def download_youtube_video(youtube_id, output_path=None):
     try:
         if output_path is None:
-            output_path = os.path.join(
-                config["yt1b_path"], "downloaded_videos", f"video_{youtube_id}.mp4"
-            )
+            output_path = os.path.join(config["yt1b_path"], "downloaded_videos", f"video_{youtube_id}.mp4")
         url = f"https://www.youtube.com/watch?v={youtube_id}"
         if os.path.exists(output_path):
             return youtube_id, None
@@ -102,10 +95,7 @@ def download_youtube():
             break
         videos_error = set()
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(download_youtube_video, youtube_id)
-                for youtube_id in videos_to_download_still
-            ]
+            futures = [executor.submit(download_youtube_video, youtube_id) for youtube_id in videos_to_download_still]
             for future in concurrent.futures.as_completed(futures):
                 youtube_id, exception = future.result()
                 if exception is None:
@@ -114,9 +104,7 @@ def download_youtube():
                     videos_unavailable.add(youtube_id)
                 else:
                     videos_error.add(youtube_id)
-        videos_to_download_still = (
-            all_videos_to_download - videos_downloaded - videos_unavailable
-        )
+        videos_to_download_still = all_videos_to_download - videos_downloaded - videos_unavailable
         assert videos_to_download_still == videos_error
 
     if len(videos_unavailable) + len(videos_to_download_still) > 0:
@@ -151,9 +139,7 @@ def download_droid():
 
     max_workers = min(16, len(download_tasks))
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_task = {
-            executor.submit(download_video, task): task for task in download_tasks
-        }
+        future_to_task = {executor.submit(download_video, task): task for task in download_tasks}
         for future in as_completed(future_to_task):
             gcs_path, success, error = future.result()
             if not success:
@@ -173,9 +159,7 @@ def download_ego4d():
             original_video = img["original_video"]
             original_videos.add(original_video)
 
-    original_video_uids = [
-        video_uid.replace(".mp4", "") for video_uid in original_videos
-    ]
+    original_video_uids = [video_uid.replace(".mp4", "") for video_uid in original_videos]
     video_ids_download = original_video_uids
     num_download_retries = 2
     download_correct = False
@@ -198,18 +182,14 @@ def download_ego4d():
         )
 
         # Run the command
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         message = result.stderr
         if (
             "RuntimeError: The following requested video UIDs could not be found in the manifest for version:"
             in result.stderr
         ):
             not_findable_videos = ast.literal_eval(result.stderr.split("\n")[-2])
-            video_ids_download = [
-                video_uid
-                for video_uid in video_ids_download
-                if video_uid not in not_findable_videos
-            ]
+            video_ids_download = [video_uid for video_uid in video_ids_download if video_uid not in not_findable_videos]
         else:
             download_correct = True
             break
@@ -242,9 +222,7 @@ def download_sav():
 def main():
     assert len(sys.argv) > 1, "You have to provide the name of the dataset"
     dataset_name = sys.argv[1]
-    assert (
-        dataset_name in annotation_files
-    ), f"The dataset can be one of {list(annotation_files.keys())}"
+    assert dataset_name in annotation_files, f"The dataset can be one of {list(annotation_files.keys())}"
 
     if dataset_name == "yt1b":
         download_youtube()

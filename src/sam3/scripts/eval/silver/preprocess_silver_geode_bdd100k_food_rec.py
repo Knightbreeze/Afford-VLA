@@ -4,8 +4,8 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import pandas as pd
-import utils
 from tqdm import tqdm
+import utils
 
 
 def main(args, n_workers=20):
@@ -15,15 +15,9 @@ def main(args, n_workers=20):
     img_ids = utils.get_image_ids(args.annotation_file)
     if args.dataset_name == "geode":
         metadata = pd.read_csv(raw_folder / "index.csv")
-        metadata["flat_filepath"] = metadata.file_path.apply(
-            lambda x: x.replace("/", "_")
-        )
-        metadata["original_absolute_path"] = metadata.file_path.apply(
-            lambda x: str((raw_folder / "images") / x)
-        )
-        metadata["new_absolute_path"] = metadata.flat_filepath.apply(
-            lambda x: str(processed_folder / x)
-        )
+        metadata["flat_filepath"] = metadata.file_path.apply(lambda x: x.replace("/", "_"))
+        metadata["original_absolute_path"] = metadata.file_path.apply(lambda x: str((raw_folder / "images") / x))
+        metadata["new_absolute_path"] = metadata.flat_filepath.apply(lambda x: str(processed_folder / x))
         metadata["filestem"] = metadata.new_absolute_path.apply(lambda x: Path(x).stem)
         img_id_mapping = metadata.set_index("filestem").to_dict()
         # print(img_id_mapping.keys())
@@ -38,18 +32,14 @@ def main(args, n_workers=20):
         bdd_subfolder = "100k/train"
         img_filenames = utils.get_filenames(args.annotation_file)
         raw_folder_bdd_images = raw_folder / bdd_subfolder
-        paths = [
-            (raw_folder_bdd_images / each, processed_folder / each)
-            for each in img_filenames
-        ]
+        paths = [(raw_folder_bdd_images / each, processed_folder / each) for each in img_filenames]
     elif args.dataset_name == "food_rec":
         food_subfolder = "public_validation_set_2.0/images"
         img_filenames = utils.get_filenames(args.annotation_file)
         raw_folder_food_images = raw_folder / food_subfolder
         paths = [
             (
-                raw_folder_food_images
-                / f'{Path(each).stem.split("_")[-1]}{Path(each).suffix}',
+                raw_folder_food_images / f'{Path(each).stem.split("_")[-1]}{Path(each).suffix}',
                 processed_folder / each,
             )
             for each in img_filenames

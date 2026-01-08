@@ -1,6 +1,5 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 import warnings
-from typing import Dict, List
 
 import numpy as np
 
@@ -11,9 +10,7 @@ try:
 
     HAS_NUMBA = True
 except ImportError:
-    warnings.warn(
-        "Numba not found. Using slower pure Python implementations.", UserWarning
-    )
+    warnings.warn("Numba not found. Using slower pure Python implementations.", UserWarning)
 
 
 # -------------------- Helper Functions --------------------
@@ -24,14 +21,14 @@ def is_zero_box(bbox: list) -> bool:
     return all(x <= 0 for x in bbox[:4]) or len(bbox) < 4
 
 
-def convert_bbox_format(bbox: list) -> List[float]:
+def convert_bbox_format(bbox: list) -> list[float]:
     """Convert bbox from (x,y,w,h) to (x1,y1,x2,y2)"""
     x, y, w, h = bbox
     return [x, y, x + w, y + h]
 
 
 # -------------------- Track-level NMS --------------------
-def process_track_level_nms(video_groups: Dict, nms_threshold: float) -> Dict:
+def process_track_level_nms(video_groups: dict, nms_threshold: float) -> dict:
     """Apply track-level NMS to all videos"""
     for video_id, tracks in video_groups.items():
         track_detections = []
@@ -74,7 +71,7 @@ def process_track_level_nms(video_groups: Dict, nms_threshold: float) -> Dict:
 
 
 # -------------------- Frame-level NMS --------------------
-def process_frame_level_nms(video_groups: Dict, nms_threshold: float) -> Dict:
+def process_frame_level_nms(video_groups: dict, nms_threshold: float) -> dict:
     """Apply frame-level NMS to all videos"""
     for video_id, tracks in video_groups.items():
         if not tracks:
@@ -92,9 +89,7 @@ def process_frame_level_nms(video_groups: Dict, nms_threshold: float) -> Dict:
                     frame_detections.append(
                         {
                             "track_idx": track_idx,
-                            "bbox": np.array(
-                                convert_bbox_format(bbox), dtype=np.float32
-                            ),
+                            "bbox": np.array(convert_bbox_format(bbox), dtype=np.float32),
                             "score": track["score"],
                         }
                     )
@@ -102,9 +97,7 @@ def process_frame_level_nms(video_groups: Dict, nms_threshold: float) -> Dict:
             # Apply NMS
             if frame_detections:
                 bboxes = np.stack([d["bbox"] for d in frame_detections])
-                scores = np.array(
-                    [d["score"] for d in frame_detections], dtype=np.float32
-                )
+                scores = np.array([d["score"] for d in frame_detections], dtype=np.float32)
                 keep = apply_frame_nms(bboxes, scores, nms_threshold)
 
                 # Suppress non-kept detections
@@ -116,9 +109,7 @@ def process_frame_level_nms(video_groups: Dict, nms_threshold: float) -> Dict:
 
 
 # Track-level NMS helpers ------------------------------------------------------
-def compute_track_iou_matrix(
-    bboxes_stacked: np.ndarray, valid_masks: np.ndarray, areas: np.ndarray
-) -> np.ndarray:
+def compute_track_iou_matrix(bboxes_stacked: np.ndarray, valid_masks: np.ndarray, areas: np.ndarray) -> np.ndarray:
     """IoU matrix computation for track-level NMS with fallback to pure Python"""
     num_tracks = bboxes_stacked.shape[0]
     iou_matrix = np.zeros((num_tracks, num_tracks), dtype=np.float32)
@@ -185,17 +176,13 @@ if HAS_NUMBA:
         return iou_matrix
 
 
-def apply_track_nms(
-    track_detections: List[dict], scores: np.ndarray, nms_threshold: float
-) -> List[int]:
+def apply_track_nms(track_detections: list[dict], scores: np.ndarray, nms_threshold: float) -> list[int]:
     """Vectorized track-level NMS implementation"""
     if not track_detections:
         return []
     bboxes_stacked = np.stack([d["bboxes"] for d in track_detections], axis=0)
     valid_masks = ~np.isnan(bboxes_stacked).any(axis=2)
-    areas = (bboxes_stacked[:, :, 2] - bboxes_stacked[:, :, 0]) * (
-        bboxes_stacked[:, :, 3] - bboxes_stacked[:, :, 1]
-    )
+    areas = (bboxes_stacked[:, :, 2] - bboxes_stacked[:, :, 0]) * (bboxes_stacked[:, :, 3] - bboxes_stacked[:, :, 1])
     areas[~valid_masks] = 0
     iou_matrix = compute_track_iou_matrix(bboxes_stacked, valid_masks, areas)
     keep = []
@@ -204,9 +191,7 @@ def apply_track_nms(
     for i in range(len(order)):
         if not suppress[order[i]]:
             keep.append(order[i])
-            suppress[order[i:]] = suppress[order[i:]] | (
-                iou_matrix[order[i], order[i:]] >= nms_threshold
-            )
+            suppress[order[i:]] = suppress[order[i:]] | (iou_matrix[order[i], order[i:]] >= nms_threshold)
     return keep
 
 
@@ -215,22 +200,21 @@ def compute_frame_ious(bbox: np.ndarray, bboxes: np.ndarray) -> np.ndarray:
     """IoU computation for frame-level NMS with fallback to pure Python"""
     if HAS_NUMBA:
         return _compute_frame_ious_numba(bbox, bboxes)
-    else:
-        # Pure Python implementation
-        ious = np.zeros(len(bboxes), dtype=np.float32)
-        for i in range(len(bboxes)):
-            x1 = max(bbox[0], bboxes[i, 0])
-            y1 = max(bbox[1], bboxes[i, 1])
-            x2 = min(bbox[2], bboxes[i, 2])
-            y2 = min(bbox[3], bboxes[i, 3])
+    # Pure Python implementation
+    ious = np.zeros(len(bboxes), dtype=np.float32)
+    for i in range(len(bboxes)):
+        x1 = max(bbox[0], bboxes[i, 0])
+        y1 = max(bbox[1], bboxes[i, 1])
+        x2 = min(bbox[2], bboxes[i, 2])
+        y2 = min(bbox[3], bboxes[i, 3])
 
-            inter = max(0, x2 - x1) * max(0, y2 - y1)
-            area1 = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-            area2 = (bboxes[i, 2] - bboxes[i, 0]) * (bboxes[i, 3] - bboxes[i, 1])
-            union = area1 + area2 - inter
+        inter = max(0, x2 - x1) * max(0, y2 - y1)
+        area1 = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+        area2 = (bboxes[i, 2] - bboxes[i, 0]) * (bboxes[i, 3] - bboxes[i, 1])
+        union = area1 + area2 - inter
 
-            ious[i] = inter / union if union > 0 else 0.0
-        return ious
+        ious[i] = inter / union if union > 0 else 0.0
+    return ious
 
 
 if HAS_NUMBA:
@@ -254,31 +238,26 @@ if HAS_NUMBA:
         return ious
 
 
-def apply_frame_nms(
-    bboxes: np.ndarray, scores: np.ndarray, nms_threshold: float
-) -> List[int]:
+def apply_frame_nms(bboxes: np.ndarray, scores: np.ndarray, nms_threshold: float) -> list[int]:
     """Frame-level NMS implementation with fallback to pure Python"""
     if HAS_NUMBA:
         return _apply_frame_nms_numba(bboxes, scores, nms_threshold)
-    else:
-        # Pure Python implementation
-        order = np.argsort(-scores)
-        keep = []
-        suppress = np.zeros(len(bboxes), dtype=bool)
+    # Pure Python implementation
+    order = np.argsort(-scores)
+    keep = []
+    suppress = np.zeros(len(bboxes), dtype=bool)
 
-        for i in range(len(order)):
-            if not suppress[order[i]]:
-                keep.append(order[i])
-                current_bbox = bboxes[order[i]]
+    for i in range(len(order)):
+        if not suppress[order[i]]:
+            keep.append(order[i])
+            current_bbox = bboxes[order[i]]
 
-                remaining_bboxes = bboxes[order[i + 1 :]]
-                if len(remaining_bboxes) > 0:  # Check if there are any remaining boxes
-                    ious = compute_frame_ious(current_bbox, remaining_bboxes)
-                    suppress[order[i + 1 :]] = suppress[order[i + 1 :]] | (
-                        ious >= nms_threshold
-                    )
+            remaining_bboxes = bboxes[order[i + 1 :]]
+            if len(remaining_bboxes) > 0:  # Check if there are any remaining boxes
+                ious = compute_frame_ious(current_bbox, remaining_bboxes)
+                suppress[order[i + 1 :]] = suppress[order[i + 1 :]] | (ious >= nms_threshold)
 
-        return keep
+    return keep
 
 
 if HAS_NUMBA:
@@ -296,11 +275,7 @@ if HAS_NUMBA:
                 current_bbox = bboxes[order[i]]
 
                 if i + 1 < len(order):  # Check bounds
-                    ious = _compute_frame_ious_numba(
-                        current_bbox, bboxes[order[i + 1 :]]
-                    )
-                    suppress[order[i + 1 :]] = suppress[order[i + 1 :]] | (
-                        ious >= nms_threshold
-                    )
+                    ious = _compute_frame_ious_numba(current_bbox, bboxes[order[i + 1 :]])
+                    suppress[order[i + 1 :]] = suppress[order[i + 1 :]] | (ious >= nms_threshold)
 
         return keep

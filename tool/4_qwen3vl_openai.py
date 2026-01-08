@@ -1,14 +1,17 @@
-import time
-import os
-import json
 import base64
-from openai import OpenAI
+import json
+import os
+import time
+
 from config import *
+from openai import OpenAI
+
 
 def encode_image_to_base64(image_path):
     """将本地图片编码为 base64 字符串"""
     with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
 
 def image_processer(image_paths):
     """构建图片内容(使用 base64 编码)"""
@@ -19,20 +22,18 @@ def image_processer(image_paths):
             # 根据文件扩展名确定 MIME 类型
             ext = os.path.splitext(path)[1].lower()
             mime_type = "image/png" if ext == ".png" else "image/jpeg"
-            
-            image_contents.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:{mime_type};base64,{base64_image}"
-                }
-            })
+
+            image_contents.append(
+                {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}}
+            )
         else:
             print(f"Warning: Image not found: {path}")
     return image_contents
 
+
 def get_system_content(num_segments):
-   # System Content: Establish perception logic and output rules
-  system_content = """You are an embodied intelligence robot perception expert specializing in fine-grained manipulation tasks.
+    # System Content: Establish perception logic and output rules
+    system_content = """You are an embodied intelligence robot perception expert specializing in fine-grained manipulation tasks.
   Your goal is to identify the precise "Interaction Region" for each segment of the task based on the instruction AND the visual progression shown in the provided image sequence.
 
   ### Core Visual Analysis Guidelines
@@ -63,8 +64,8 @@ def get_system_content(num_segments):
     - Return strictly a Python list of strings. The list length must equal {num_segments}.
   """
 
-  # User Content: Provide Chain-of-Thought (Few-Shot) Examples
-  user_content_text = f"""
+    # User Content: Provide Chain-of-Thought (Few-Shot) Examples
+    user_content_text = f"""
 
   ### Reference Examples (Visual-Temporal & Multi-Object Logic)
 
@@ -115,20 +116,22 @@ def get_system_content(num_segments):
   If two objects are manipulated at once, join them with "and".
   Output the List:
   """
-  # 请你通过比较两个图片输出结果的变化，结合指令内容，输出每个步骤对应的交互区域描述，要求细粒度且符合规则。请给到我详细的分析流程
+    # 请你通过比较两个图片输出结果的变化，结合指令内容，输出每个步骤对应的交互区域描述，要求细粒度且符合规则。请给到我详细的分析流程
 
-  return system_content, user_content_text
+    return system_content, user_content_text
+
 
 def get_image(image_dir, num_segments):
     if not os.path.exists(image_dir):
         print(f"Error: Image directory not found: {image_dir}")
         exit(1)
-    
+
     import re
+
     image_files = []
     for filename in os.listdir(image_dir):
-        if filename.endswith('.png'):
-            match = re.match(r'(\d+)\.png', filename)
+        if filename.endswith(".png"):
+            match = re.match(r"(\d+)\.png", filename)
             if match:
                 image_files.append((int(match.group(1)), filename))
 
@@ -140,124 +143,113 @@ def get_image(image_dir, num_segments):
         print(f"Error: Expected {expected_count} images, but found {len(image_paths)}")
         print(f"Required: num_segments ({num_segments}) + 1 = {expected_count}")
         exit(1)
-    
+
     return image_paths
+
 
 def get_instruction(tasks_path, episode_index):
     instruction = None
-    with open(tasks_path, 'r', encoding='utf-8') as f:
+    with open(tasks_path, encoding="utf-8") as f:
         for line in f:
             data = json.loads(line.strip())
-            if data['task_index'] == episode_index:
-                instruction = data['task']
+            if data["task_index"] == episode_index:
+                instruction = data["task"]
                 break
     if instruction is None:
         print(f"Error: Could not find task for episode_index {episode_index}")
         exit(1)
     return instruction
 
+
 if __name__ == "__main__":
-  # ----- 1. 初始化 OpenAI Client -----
-  client = OpenAI(
-      api_key=API_KEY, # 请替换成您的ModelScope Access Token
-      base_url=API_BASE_URL
-  )
-  
-  # ----- 2. 配置参数 -----
-  tasks_path = f"{META_PATH}/tasks.jsonl"
-  output_path = f"{META_PATH}/aff_prompt_from_vlm.jsonl"
-  
-  # ----- 3. 读取所有任务 -----
-  all_tasks = []
-  with open(tasks_path, 'r', encoding='utf-8') as f:
-      for line in f:
-          all_tasks.append(json.loads(line.strip()))
-  
-  print(f"Found {len(all_tasks)} episodes to process")
-  print(f"Output will be saved to: {output_path}")
-  print("="*70)
-  
-  # ----- 4. 批量处理所有 episode -----
-  results = []
-  
-  for task_data in all_tasks:
-      episode_index = task_data['task_index']
-      instruction = task_data['task']
-      
-      print(f"\n[Episode {episode_index}/{len(all_tasks)-1}] Processing...")
-      print(f"Instruction: {instruction}")
-      
-      try:
-          image_dir = f"{IMAGE_PATH}/episode_{episode_index:06d}/"
-          image_paths = get_image(image_dir, NUM_SEGMENTS)
-          print(f"  ✓ Loaded {len(image_paths)} images")
-          
-          # 构建消息体
-          image_contents = image_processer(image_paths)
-          system_content, user_content_text = get_system_content(NUM_SEGMENTS)
-          
-          # 替换模板变量
-          system_content = system_content.replace("{num_segments}", str(NUM_SEGMENTS))
-          user_content_text = user_content_text.replace("{instruction}", instruction)
-          user_content_text = user_content_text.replace("{num_segments}", str(NUM_SEGMENTS))
-          
-          # 调用模型
-          response = client.chat.completions.create(
-              model=MODEL_NAME,
-              # model="Qwen/Qwen3-VL-32B-Instruct",
-              messages=[
-                  {
-                      "role": "system",
-                      "content": [{"type": "text", "text": system_content}]
-                  },
-                  {
-                      "role": "user",
-                      "content": [
-                          *image_contents,
-                          {"type": "text", "text": user_content_text}
-                      ]
-                  }
-              ],
-              stream=STREAM,
-              temperature=TEMPERATURE
-          )
-          
-          model_output = response.choices[0].message.content
-          print(f"  ✓ Model output: {model_output}")
-          
-          result = {
-              "episode_index": episode_index,
-              "num_segments": NUM_SEGMENTS,
-              "prediction": model_output
-          }
-          results.append(result)
-          
-          with open(output_path, 'w', encoding='utf-8') as f:
-              for r in results:
-                  f.write(json.dumps(r, ensure_ascii=False) + '\n')
-          
-          # 添加延迟避免API限流
-          if episode_index < len(all_tasks) - 1:
-              time.sleep(5)
-          
-      except Exception as e:
-          print(f"  ✗ Error processing episode {episode_index}: {str(e)}")
-          # 记录错误但继续处理下一个
-          result = {
-              "episode_index": episode_index,
-              "instruction": instruction,
-              "num_segments": NUM_SEGMENTS,
-              "prediction": None,
-              "error": str(e)
-          }
-          results.append(result)
-          continue
-  
-  # ----- 5. 输出统计信息 -----
-  print("\n" + "="*70)
-  print(f"Processing completed!")
-  print(f"Total episodes: {len(all_tasks)}")
-  print(f"Successful: {sum(1 for r in results if r.get('prediction') is not None)}")
-  print(f"Failed: {sum(1 for r in results if r.get('prediction') is None)}")
-  print(f"Results saved to: {output_path}")
-  print("="*70)
+    # ----- 1. 初始化 OpenAI Client -----
+    client = OpenAI(
+        api_key=API_KEY,  # 请替换成您的ModelScope Access Token
+        base_url=API_BASE_URL,
+    )
+
+    # ----- 2. 配置参数 -----
+    tasks_path = f"{META_PATH}/tasks.jsonl"
+    output_path = f"{META_PATH}/aff_prompt_from_vlm.jsonl"
+
+    # ----- 3. 读取所有任务 -----
+    all_tasks = []
+    with open(tasks_path, encoding="utf-8") as f:
+        for line in f:
+            all_tasks.append(json.loads(line.strip()))
+
+    print(f"Found {len(all_tasks)} episodes to process")
+    print(f"Output will be saved to: {output_path}")
+    print("=" * 70)
+
+    # ----- 4. 批量处理所有 episode -----
+    results = []
+
+    for task_data in all_tasks:
+        episode_index = task_data["task_index"]
+        instruction = task_data["task"]
+
+        print(f"\n[Episode {episode_index}/{len(all_tasks)-1}] Processing...")
+        print(f"Instruction: {instruction}")
+
+        try:
+            image_dir = f"{IMAGE_PATH}/episode_{episode_index:06d}/"
+            image_paths = get_image(image_dir, NUM_SEGMENTS)
+            print(f"  ✓ Loaded {len(image_paths)} images")
+
+            # 构建消息体
+            image_contents = image_processer(image_paths)
+            system_content, user_content_text = get_system_content(NUM_SEGMENTS)
+
+            # 替换模板变量
+            system_content = system_content.replace("{num_segments}", str(NUM_SEGMENTS))
+            user_content_text = user_content_text.replace("{instruction}", instruction)
+            user_content_text = user_content_text.replace("{num_segments}", str(NUM_SEGMENTS))
+
+            # 调用模型
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                # model="Qwen/Qwen3-VL-32B-Instruct",
+                messages=[
+                    {"role": "system", "content": [{"type": "text", "text": system_content}]},
+                    {"role": "user", "content": [*image_contents, {"type": "text", "text": user_content_text}]},
+                ],
+                stream=STREAM,
+                temperature=TEMPERATURE,
+            )
+
+            model_output = response.choices[0].message.content
+            print(f"  ✓ Model output: {model_output}")
+
+            result = {"episode_index": episode_index, "num_segments": NUM_SEGMENTS, "prediction": model_output}
+            results.append(result)
+
+            with open(output_path, "w", encoding="utf-8") as f:
+                for r in results:
+                    f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+            # 添加延迟避免API限流
+            if episode_index < len(all_tasks) - 1:
+                time.sleep(5)
+
+        except Exception as e:
+            print(f"  ✗ Error processing episode {episode_index}: {e!s}")
+            # 记录错误但继续处理下一个
+            result = {
+                "episode_index": episode_index,
+                "instruction": instruction,
+                "num_segments": NUM_SEGMENTS,
+                "prediction": None,
+                "error": str(e),
+            }
+            results.append(result)
+            continue
+
+    # ----- 5. 输出统计信息 -----
+    print("\n" + "=" * 70)
+    print("Processing completed!")
+    print(f"Total episodes: {len(all_tasks)}")
+    print(f"Successful: {sum(1 for r in results if r.get('prediction') is not None)}")
+    print(f"Failed: {sum(1 for r in results if r.get('prediction') is None)}")
+    print(f"Results saved to: {output_path}")
+    print("=" * 70)

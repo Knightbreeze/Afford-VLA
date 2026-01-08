@@ -6,10 +6,10 @@ import torch
 import torch.nn.functional as F
 
 from sam3.model.memory import SimpleMaskEncoder
-
-from sam3.model.sam3_tracker_utils import get_1d_sine_pe, select_closest_cond_frames
-
-from sam3.sam.mask_decoder import MaskDecoder, MLP
+from sam3.model.sam3_tracker_utils import get_1d_sine_pe
+from sam3.model.sam3_tracker_utils import select_closest_cond_frames
+from sam3.sam.mask_decoder import MLP
+from sam3.sam.mask_decoder import MaskDecoder
 from sam3.sam.prompt_encoder import PromptEncoder
 from sam3.sam.transformer import TwoWayTransformer
 from sam3.train.data.collator import BatchedDatapoint
@@ -93,17 +93,13 @@ class Sam3TrackerBase(torch.nn.Module):
         # Part 3: memory encoder for the previous frame's outputs
         self.maskmem_backbone = maskmem_backbone
         self.mem_dim = self.hidden_dim
-        if hasattr(self.maskmem_backbone, "out_proj") and hasattr(
-            self.maskmem_backbone.out_proj, "weight"
-        ):
+        if hasattr(self.maskmem_backbone, "out_proj") and hasattr(self.maskmem_backbone.out_proj, "weight"):
             # if there is compression of memories along channel dim
             self.mem_dim = self.maskmem_backbone.out_proj.weight.shape[0]
         self.num_maskmem = num_maskmem  # Number of memories accessible
 
         # Temporal encoding of the memories
-        self.maskmem_tpos_enc = torch.nn.Parameter(
-            torch.zeros(num_maskmem, 1, 1, self.mem_dim)
-        )
+        self.maskmem_tpos_enc = torch.nn.Parameter(torch.zeros(num_maskmem, 1, 1, self.mem_dim))
         trunc_normal_(self.maskmem_tpos_enc, std=0.02)
 
         # a single token to indicate no memory embedding from previous frames
@@ -164,10 +160,7 @@ class Sam3TrackerBase(torch.nn.Module):
             return torch.zeros(len(rel_pos_list), self.mem_dim, device=device)
 
         t_diff_max = max_abs_pos - 1 if max_abs_pos is not None else 1
-        pos_enc = (
-            torch.tensor(rel_pos_list).pin_memory().to(device=device, non_blocking=True)
-            / t_diff_max
-        )
+        pos_enc = torch.tensor(rel_pos_list).pin_memory().to(device=device, non_blocking=True) / t_diff_max
         tpos_dim = self.hidden_dim
         pos_enc = get_1d_sine_pe(pos_enc, dim=tpos_dim)
         pos_enc = self.obj_ptr_tpos_proj(pos_enc)
@@ -447,20 +440,12 @@ class Sam3TrackerBase(torch.nn.Module):
         backbone_out = self.backbone.forward_image(img_batch)["sam2_backbone_out"]
         # precompute projected level 0 and level 1 features in SAM decoder
         # to avoid running it again on every SAM click
-        backbone_out["backbone_fpn"][0] = self.sam_mask_decoder.conv_s0(
-            backbone_out["backbone_fpn"][0]
-        )
-        backbone_out["backbone_fpn"][1] = self.sam_mask_decoder.conv_s1(
-            backbone_out["backbone_fpn"][1]
-        )
+        backbone_out["backbone_fpn"][0] = self.sam_mask_decoder.conv_s0(backbone_out["backbone_fpn"][0])
+        backbone_out["backbone_fpn"][1] = self.sam_mask_decoder.conv_s1(backbone_out["backbone_fpn"][1])
         # Clone to help torch.compile
         for i in range(len(backbone_out["backbone_fpn"])):
-            backbone_out["backbone_fpn"][i] = self._maybe_clone(
-                backbone_out["backbone_fpn"][i]
-            )
-            backbone_out["vision_pos_enc"][i] = self._maybe_clone(
-                backbone_out["vision_pos_enc"][i]
-            )
+            backbone_out["backbone_fpn"][i] = self._maybe_clone(backbone_out["backbone_fpn"][i])
+            backbone_out["vision_pos_enc"][i] = self._maybe_clone(backbone_out["vision_pos_enc"][i])
         return backbone_out
 
     def _prepare_backbone_features(self, backbone_out):
@@ -516,14 +501,10 @@ class Sam3TrackerBase(torch.nn.Module):
         return score_per_frame
 
     def frame_filter(self, output_dict, track_in_reverse, frame_idx, num_frames, r):
-        if (frame_idx == 0 and not track_in_reverse) or (
-            frame_idx == num_frames - 1 and track_in_reverse
-        ):
+        if (frame_idx == 0 and not track_in_reverse) or (frame_idx == num_frames - 1 and track_in_reverse):
             return []
 
-        max_num = min(
-            num_frames, self.max_obj_ptrs_in_encoder
-        )  ## maximum number of pointer memory frames to consider
+        max_num = min(num_frames, self.max_obj_ptrs_in_encoder)  ## maximum number of pointer memory frames to consider
 
         if not track_in_reverse:
             start = frame_idx - 1
@@ -597,10 +578,7 @@ class Sam3TrackerBase(torch.nn.Module):
                 self.max_cond_frames_in_attn,
                 keep_first_cond_frame=self.keep_first_cond_frame,
             )
-            t_pos_and_prevs = [
-                ((frame_idx - t) * tpos_sign_mul, out, True)
-                for t, out in selected_cond_outputs.items()
-            ]
+            t_pos_and_prevs = [((frame_idx - t) * tpos_sign_mul, out, True) for t, out in selected_cond_outputs.items()]
             # Add last (self.num_maskmem - 1) frames before current frame for non-conditioning memory
             # the earliest one has t_pos=1 and the latest one has t_pos=self.num_maskmem-1
             # We also allow taking the memory frame non-consecutively (with r>1), in which case
@@ -608,9 +586,7 @@ class Sam3TrackerBase(torch.nn.Module):
             r = 1 if self.training else self.memory_temporal_stride_for_eval
 
             if self.use_memory_selection:
-                valid_indices = self.frame_filter(
-                    output_dict, track_in_reverse, frame_idx, num_frames, r
-                )
+                valid_indices = self.frame_filter(output_dict, track_in_reverse, frame_idx, num_frames, r)
 
             for t_pos in range(1, self.num_maskmem):
                 t_rel = self.num_maskmem - t_pos  # how many frames before current frame
@@ -618,29 +594,27 @@ class Sam3TrackerBase(torch.nn.Module):
                     if t_rel > len(valid_indices):
                         continue
                     prev_frame_idx = valid_indices[-t_rel]
-                else:
-                    if t_rel == 1:
-                        # for t_rel == 1, we take the last frame (regardless of r)
-                        if not track_in_reverse:
-                            # the frame immediately before this frame (i.e. frame_idx - 1)
-                            prev_frame_idx = frame_idx - t_rel
-                        else:
-                            # the frame immediately after this frame (i.e. frame_idx + 1)
-                            prev_frame_idx = frame_idx + t_rel
+                elif t_rel == 1:
+                    # for t_rel == 1, we take the last frame (regardless of r)
+                    if not track_in_reverse:
+                        # the frame immediately before this frame (i.e. frame_idx - 1)
+                        prev_frame_idx = frame_idx - t_rel
                     else:
-                        # for t_rel >= 2, we take the memory frame from every r-th frames
-                        if not track_in_reverse:
-                            # first find the nearest frame among every r-th frames before this frame
-                            # for r=1, this would be (frame_idx - 2)
-                            prev_frame_idx = ((frame_idx - 2) // r) * r
-                            # then seek further among every r-th frames
-                            prev_frame_idx = prev_frame_idx - (t_rel - 2) * r
-                        else:
-                            # first find the nearest frame among every r-th frames after this frame
-                            # for r=1, this would be (frame_idx + 2)
-                            prev_frame_idx = -(-(frame_idx + 2) // r) * r
-                            # then seek further among every r-th frames
-                            prev_frame_idx = prev_frame_idx + (t_rel - 2) * r
+                        # the frame immediately after this frame (i.e. frame_idx + 1)
+                        prev_frame_idx = frame_idx + t_rel
+                # for t_rel >= 2, we take the memory frame from every r-th frames
+                elif not track_in_reverse:
+                    # first find the nearest frame among every r-th frames before this frame
+                    # for r=1, this would be (frame_idx - 2)
+                    prev_frame_idx = ((frame_idx - 2) // r) * r
+                    # then seek further among every r-th frames
+                    prev_frame_idx = prev_frame_idx - (t_rel - 2) * r
+                else:
+                    # first find the nearest frame among every r-th frames after this frame
+                    # for r=1, this would be (frame_idx + 2)
+                    prev_frame_idx = -(-(frame_idx + 2) // r) * r
+                    # then seek further among every r-th frames
+                    prev_frame_idx = prev_frame_idx + (t_rel - 2) * r
 
                 out = output_dict["non_cond_frame_outputs"].get(prev_frame_idx, None)
                 if out is None:
@@ -657,25 +631,18 @@ class Sam3TrackerBase(torch.nn.Module):
                 feats = prev["maskmem_features"].cuda(non_blocking=True)
                 seq_len = feats.shape[-2] * feats.shape[-1]
                 to_cat_prompt.append(feats.flatten(2).permute(2, 0, 1))
-                to_cat_prompt_mask.append(
-                    torch.zeros(B, seq_len, device=device, dtype=bool)
-                )
+                to_cat_prompt_mask.append(torch.zeros(B, seq_len, device=device, dtype=bool))
                 # Spatial positional encoding (it might have been offloaded to CPU in eval)
                 maskmem_enc = prev["maskmem_pos_enc"][-1].cuda()
                 maskmem_enc = maskmem_enc.flatten(2).permute(2, 0, 1)
 
-                if (
-                    is_selected_cond_frame
-                    and getattr(self, "cond_frame_spatial_embedding", None) is not None
-                ):
+                if is_selected_cond_frame and getattr(self, "cond_frame_spatial_embedding", None) is not None:
                     # add a spatial embedding for the conditioning frame
                     maskmem_enc = maskmem_enc + self.cond_frame_spatial_embedding
 
                 # Temporal positional encoding
                 t = t_pos if not is_selected_cond_frame else 0
-                maskmem_enc = (
-                    maskmem_enc + self.maskmem_tpos_enc[self.num_maskmem - t - 1]
-                )
+                maskmem_enc = maskmem_enc + self.maskmem_tpos_enc[self.num_maskmem - t - 1]
                 to_cat_prompt_pos_embed.append(maskmem_enc)
 
             # Construct the list of past object pointers
@@ -686,9 +653,7 @@ class Sam3TrackerBase(torch.nn.Module):
                 and self.rng.random() < self.prob_to_dropout_spatial_mem
             ):
                 num_spatial_mem_keep = self.rng.integers(len(to_cat_prompt) + 1)
-                keep = self.rng.choice(
-                    range(len(to_cat_prompt)), num_spatial_mem_keep, replace=False
-                ).tolist()
+                keep = self.rng.choice(range(len(to_cat_prompt)), num_spatial_mem_keep, replace=False).tolist()
                 to_cat_prompt = [to_cat_prompt[i] for i in keep]
                 to_cat_prompt_mask = [to_cat_prompt_mask[i] for i in keep]
                 to_cat_prompt_pos_embed = [to_cat_prompt_pos_embed[i] for i in keep]
@@ -725,9 +690,7 @@ class Sam3TrackerBase(torch.nn.Module):
                         break
                     t = valid_indices[-t_diff]
 
-                out = output_dict["non_cond_frame_outputs"].get(
-                    t, unselected_cond_outputs.get(t, None)
-                )
+                out = output_dict["non_cond_frame_outputs"].get(t, unselected_cond_outputs.get(t, None))
                 if out is not None:
                     pos_and_ptrs.append((t_diff, out["obj_ptr"], False))
 
@@ -740,9 +703,7 @@ class Sam3TrackerBase(torch.nn.Module):
                     obj_ptrs = (
                         obj_ptrs
                         + self.cond_frame_obj_ptr_embedding
-                        * torch.tensor(is_selected_cond_frame_list, device=device)[
-                            ..., None, None
-                        ].float()
+                        * torch.tensor(is_selected_cond_frame_list, device=device)[..., None, None].float()
                     )
                 # a temporal positional embedding based on how far each object pointer is from
                 # the current frame (sine embedding normalized by the max pointer num).
@@ -815,9 +776,7 @@ class Sam3TrackerBase(torch.nn.Module):
             # optionally, apply non-overlapping constraints to the masks (it's applied
             # in the batch dimension and should only be used during eval, where all
             # the objects come from the same video under batch size 1).
-            pred_masks_high_res = self._apply_non_overlapping_constraints(
-                pred_masks_high_res
-            )
+            pred_masks_high_res = self._apply_non_overlapping_constraints(pred_masks_high_res)
         # scale the raw mask logits with a temperature before applying sigmoid
         if is_mask_from_pts and not self.training:
             mask_for_mem = (pred_masks_high_res > 0).float()
@@ -832,9 +791,7 @@ class Sam3TrackerBase(torch.nn.Module):
 
         if isinstance(self.maskmem_backbone, SimpleMaskEncoder):
             pix_feat = pix_feat.view_as(pix_feat)
-            maskmem_out = self.maskmem_backbone(
-                pix_feat, mask_for_mem, skip_mask_sigmoid=True
-            )
+            maskmem_out = self.maskmem_backbone(pix_feat, mask_for_mem, skip_mask_sigmoid=True)
         else:
             maskmem_out = self.maskmem_backbone(image, pix_feat, mask_for_mem)
         # Clone the feats and pos_enc to enable compilation
@@ -843,9 +800,9 @@ class Sam3TrackerBase(torch.nn.Module):
         # add a no-object embedding to the spatial memory to indicate that the frame
         # is predicted to be occluded (i.e. no object is appearing in the frame)
         is_obj_appearing = (object_score_logits > 0).float()
-        maskmem_features += (
-            1 - is_obj_appearing[..., None, None]
-        ) * self.no_obj_embed_spatial[..., None, None].expand(*maskmem_features.shape)
+        maskmem_features += (1 - is_obj_appearing[..., None, None]) * self.no_obj_embed_spatial[..., None, None].expand(
+            *maskmem_features.shape
+        )
 
         return maskmem_features, maskmem_pos_enc
 
@@ -905,8 +862,7 @@ class Sam3TrackerBase(torch.nn.Module):
             )
             # Append the output, depending on whether it's a conditioning frame
             add_output_as_cond_frame = stage_id in init_cond_frames or (
-                self.add_all_frames_to_correct_as_cond
-                and stage_id in frames_to_add_correction_pt
+                self.add_all_frames_to_correct_as_cond and stage_id in frames_to_add_correction_pt
             )
             if add_output_as_cond_frame:
                 output_dict["cond_frame_outputs"][stage_id] = current_out
@@ -921,9 +877,7 @@ class Sam3TrackerBase(torch.nn.Module):
         all_frame_outputs.update(output_dict["non_cond_frame_outputs"])
         all_frame_outputs = [all_frame_outputs[t] for t in range(num_frames)]
         # Make DDP happy with activation checkpointing by removing unused keys
-        all_frame_outputs = [
-            {k: v for k, v in d.items() if k != "obj_ptr"} for d in all_frame_outputs
-        ]
+        all_frame_outputs = [{k: v for k, v in d.items() if k != "obj_ptr"} for d in all_frame_outputs]
 
         return all_frame_outputs
 
@@ -963,9 +917,7 @@ class Sam3TrackerBase(torch.nn.Module):
             # (see it as a GT mask) without using a SAM prompt encoder + mask decoder.
             pix_feat = current_vision_feats[-1].permute(1, 2, 0)
             pix_feat = pix_feat.view(-1, self.hidden_dim, *feat_sizes[-1])
-            sam_outputs = self._use_mask_as_output(
-                pix_feat, high_res_features, mask_inputs
-            )
+            sam_outputs = self._use_mask_as_output(pix_feat, high_res_features, mask_inputs)
         else:
             # fused the visual feature with previous memory features in the memory bank
             pix_feat_with_mem = self._prepare_memory_conditioned_features(
@@ -1013,9 +965,7 @@ class Sam3TrackerBase(torch.nn.Module):
             current_out["object_score_logits"] = object_score_logits
             iou_score = ious.max(-1)[0]
             current_out["iou_score"] = iou_score
-            current_out["eff_iou_score"] = self.cal_mem_score(
-                object_score_logits, iou_score
-            )
+            current_out["eff_iou_score"] = self.cal_mem_score(object_score_logits, iou_score)
         if not self.training:
             # Only add this in inference (to avoid unused param in activation checkpointing;
             # it's mainly used in the demo to encode spatial memories w/ consolidated masks)
@@ -1082,24 +1032,17 @@ class Sam3TrackerBase(torch.nn.Module):
             if past_out is not None:
                 print(past_out.get("eff_iou_score", 0))
                 if (
-                    self.use_memory_selection
-                    and past_out.get("eff_iou_score", 0) < self.mf_threshold
+                    self.use_memory_selection and past_out.get("eff_iou_score", 0) < self.mf_threshold
                 ) or not self.use_memory_selection:
-                    output_dict["non_cond_frame_outputs"][past_frame_idx] = (
-                        _trim_past_out(past_out, current_out)
-                    )
+                    output_dict["non_cond_frame_outputs"][past_frame_idx] = _trim_past_out(past_out, current_out)
 
             if (
                 self.use_memory_selection and not self.offload_output_to_cpu_for_eval
             ):  ## design for memory selection, trim too old frames to save memory
                 far_old_frame_idx = frame_idx - 20 * self.max_obj_ptrs_in_encoder
-                past_out = output_dict["non_cond_frame_outputs"].get(
-                    far_old_frame_idx, None
-                )
+                past_out = output_dict["non_cond_frame_outputs"].get(far_old_frame_idx, None)
                 if past_out is not None:
-                    output_dict["non_cond_frame_outputs"][far_old_frame_idx] = (
-                        _trim_past_out(past_out, current_out)
-                    )
+                    output_dict["non_cond_frame_outputs"][far_old_frame_idx] = _trim_past_out(past_out, current_out)
 
         return current_out
 

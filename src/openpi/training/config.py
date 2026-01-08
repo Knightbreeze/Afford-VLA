@@ -462,9 +462,9 @@ class LeRobotDROIDDataConfig(DataConfigFactory):
             model_transforms=model_transforms,
         )
 
+
 @dataclasses.dataclass(frozen=True)
 class LeRobotMyDataConfig(DataConfigFactory):
-
     extra_delta_transform: bool = False
 
     @override
@@ -486,7 +486,6 @@ class LeRobotMyDataConfig(DataConfigFactory):
                         "rgb_left": "rgb_left",
                         "rgb_right": "rgb_right",
                         "rgb_global": "rgb_global",
-
                         "observation.state": "observation.state",
                         "actions": "action",
                         "prompt": "task",
@@ -548,7 +547,7 @@ class LeRobotMyDataConfig(DataConfigFactory):
             model_transforms=model_transforms,
         )
 
-    
+
 @dataclasses.dataclass(frozen=True)
 class LeRobotRobotwinDataConfig(DataConfigFactory):
     # If true, will convert joint dimensions to deltas with respect to the current state before passing to the model.
@@ -601,6 +600,7 @@ class LeRobotRobotwinDataConfig(DataConfigFactory):
             action_sequence_keys=self.action_sequence_keys,
         )
 
+
 @dataclasses.dataclass(frozen=True)
 class TrainConfig:
     # Name of the config. Must be unique. Will be used to reference this config.
@@ -628,15 +628,14 @@ class TrainConfig:
     vla_layers_align: int | None = None  # total 18 for paligemma-2b
     aff_layers_align: int | None = None  # total 6 for aff_funsion_encoder
 
-    aff_input_image_key : list[str] | None = None
+    aff_input_image_key: list[str] | None = None
 
     pooling_func: str | None = None
     use_aff_pe: bool | None = None
     use_vlm_norm: bool | None = None
 
     align_loss_coeff: float = 0.5
-      
-    
+
     # Precision for PyTorch training.
     pytorch_training_precision: Literal["bfloat16", "float32"] = "bfloat16"
 
@@ -736,20 +735,17 @@ _CONFIGS = [
             decay_lr=5e-5,
         ),
         optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
-
         # weight loader
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
         pytorch_weight_path="/home/nightbreeze/research/ckpt/pi05_base_pytorch",
-
-        # affordance configs 
+        # affordance configs
         aff_input_image_key=["base_0_rgb"],
         vla_layers_align=12,
         aff_layers_align=-1,
-        pooling_func='bilinear',
+        pooling_func="bilinear",
         use_aff_pe=True,
         use_vlm_norm=True,
         align_loss_coeff=0.5,
-
         # training configs
         batch_size=2,
         num_train_steps=30_000,
@@ -776,27 +772,23 @@ _CONFIGS = [
             decay_lr=5e-5,
         ),
         optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
-
         # weight loader
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi05_base/params"),
         pytorch_weight_path="/home/nightbreeze/research/ckpt/pi05_base_pytorch",
-
-        # affordance configs 
+        # affordance configs
         aff_input_image_key=["base_0_rgb"],
         vla_layers_align=12,
         aff_layers_align=-1,
-        pooling_func='bilinear',
+        pooling_func="bilinear",
         use_aff_pe=True,
         use_vlm_norm=True,
         align_loss_coeff=0.5,
-
         # training configs
         batch_size=2,
         num_train_steps=30_000,
         ema_decay=0.999,
         wandb_enabled=False,
     ),
-
     TrainConfig(
         name="pi0_align_aloha_place_block",  # <config_name>
         model=pi0_config.Pi0Config(),
@@ -820,12 +812,12 @@ _CONFIGS = [
             ),
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi0_base/params"),
-        pytorch_weight_path='./checkpoints/pi0_base_full_torch',
+        pytorch_weight_path="./checkpoints/pi0_base_full_torch",
         #
         aff_input_image_key=["base_0_rgb"],
         vla_layers_align=12,
         aff_layers_align=-1,
-        pooling_func='bilinear',
+        pooling_func="bilinear",
         use_aff_pe=True,
         use_vlm_norm=True,
         align_loss_coeff=0.5,

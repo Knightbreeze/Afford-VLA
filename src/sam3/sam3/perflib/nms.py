@@ -7,7 +7,6 @@ import torch
 
 from sam3.perflib.masks_ops import mask_iou
 
-
 try:
     from torch_generic_nms import generic_nms as generic_nms_cuda
 
@@ -52,9 +51,7 @@ def nms_masks(
     return keep
 
 
-def generic_nms(
-    ious: torch.Tensor, scores: torch.Tensor, iou_threshold=0.5
-) -> torch.Tensor:
+def generic_nms(ious: torch.Tensor, scores: torch.Tensor, iou_threshold=0.5) -> torch.Tensor:
     """A generic version of `torchvision.ops.nms` that takes a pairwise IoU matrix."""
 
     assert ious.dim() == 2 and ious.size(0) == ious.size(1)
@@ -63,17 +60,14 @@ def generic_nms(
     if ious.is_cuda:
         if GENERIC_NMS_AVAILABLE:
             return generic_nms_cuda(ious, scores, iou_threshold, use_iou_matrix=True)
-        else:
-            from sam3.perflib.triton.nms import nms_triton
+        from sam3.perflib.triton.nms import nms_triton
 
-            return nms_triton(ious, scores, iou_threshold)
+        return nms_triton(ious, scores, iou_threshold)
 
     return generic_nms_cpu(ious, scores, iou_threshold)
 
 
-def generic_nms_cpu(
-    ious: torch.Tensor, scores: torch.Tensor, iou_threshold=0.5
-) -> torch.Tensor:
+def generic_nms_cpu(ious: torch.Tensor, scores: torch.Tensor, iou_threshold=0.5) -> torch.Tensor:
     """
     A generic version of `torchvision.ops.nms` that takes a pairwise IoU matrix. (CPU implementation
     based on https://github.com/jwyang/faster-rcnn.pytorch/blob/master/lib/model/nms/nms_cpu.py)

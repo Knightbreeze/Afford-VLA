@@ -1,37 +1,35 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 import os
-from typing import Optional
 
-import torch
-import torch.nn as nn
 from huggingface_hub import hf_hub_download
 from iopath.common.file_io import g_pathmgr
-from sam3.model.decoder import (
-    TransformerDecoder,
-    TransformerDecoderLayer,
-    TransformerDecoderLayerv2,
-    TransformerEncoderCrossAttention,
-)
-from sam3.model.encoder import TransformerEncoderFusion, TransformerEncoderLayer
+import torch
+import torch.nn as nn
+
+from sam3.model.decoder import TransformerDecoder
+from sam3.model.decoder import TransformerDecoderLayer
+from sam3.model.decoder import TransformerDecoderLayerv2
+from sam3.model.decoder import TransformerEncoderCrossAttention
+from sam3.model.encoder import TransformerEncoderFusion
+from sam3.model.encoder import TransformerEncoderLayer
 from sam3.model.geometry_encoders import SequenceGeometryEncoder
-from sam3.model.maskformer_segmentation import PixelDecoder, UniversalSegmentationHead
-from sam3.model.memory import (
-    CXBlock,
-    SimpleFuser,
-    SimpleMaskDownSampler,
-    SimpleMaskEncoder,
-)
-from sam3.model.model_misc import (
-    DotProductScoring,
-    MLP,
-    MultiheadAttentionWrapper as MultiheadAttention,
-    TransformerWrapper,
-)
+from sam3.model.maskformer_segmentation import PixelDecoder
+from sam3.model.maskformer_segmentation import UniversalSegmentationHead
+from sam3.model.memory import CXBlock
+from sam3.model.memory import SimpleFuser
+from sam3.model.memory import SimpleMaskDownSampler
+from sam3.model.memory import SimpleMaskEncoder
+from sam3.model.model_misc import MLP
+from sam3.model.model_misc import DotProductScoring
+from sam3.model.model_misc import MultiheadAttentionWrapper as MultiheadAttention
+from sam3.model.model_misc import TransformerWrapper
 from sam3.model.necks import Sam3DualViTDetNeck
 from sam3.model.position_encoding import PositionEmbeddingSine
 from sam3.model.sam1_task_predictor import SAM3InteractiveImagePredictor
-from sam3.model.sam3_image import Sam3Image, Sam3ImageOnVideoMultiGPU
+from sam3.model.sam3_image import Sam3Image
+from sam3.model.sam3_image import Sam3ImageOnVideoMultiGPU
+from sam3.model.sam3_image_aff_memory import Sam3AffordanceModel
 from sam3.model.sam3_tracking_predictor import Sam3TrackerPredictor
 from sam3.model.sam3_video_inference import Sam3VideoInferenceWithInstanceInteractivity
 from sam3.model.sam3_video_predictor import Sam3VideoPredictorMultiGPU
@@ -40,7 +38,7 @@ from sam3.model.tokenizer_ve import SimpleTokenizer
 from sam3.model.vitdet import ViT
 from sam3.model.vl_combiner import SAM3VLBackbone
 from sam3.sam.transformer import RoPEAttention
-from sam3.model.sam3_image_aff_memory import Sam3AffordanceModel
+
 
 # Setup TensorFloat-32 for Ampere GPUs if available
 def _setup_tf32() -> None:
@@ -343,9 +341,7 @@ def _create_tracker_maskmem_backbone():
     )
 
     # Mask processing components
-    mask_downsampler = SimpleMaskDownSampler(
-        kernel_size=3, stride=2, padding=1, interpol_size=[1152, 1152]
-    )
+    mask_downsampler = SimpleMaskDownSampler(kernel_size=3, stride=2, padding=1, interpol_size=[1152, 1152])
 
     cx_block_layer = CXBlock(
         dim=256,
@@ -499,9 +495,7 @@ def _create_text_encoder(bpe_path: str) -> VETextEncoder:
     )
 
 
-def _create_vision_backbone(
-    compile_mode=None, enable_inst_interactivity=True
-) -> Sam3DualViTDetNeck:
+def _create_vision_backbone(compile_mode=None, enable_inst_interactivity=True) -> Sam3DualViTDetNeck:
     """Create SAM3 visual backbone with ViT and neck."""
     # Position encoding
     position_encoding = _create_position_encoding(precompute_resolution=1008)
@@ -530,23 +524,14 @@ def _load_checkpoint(model, checkpoint_path):
         ckpt = torch.load(f, map_location="cpu", weights_only=True)
     if "model" in ckpt and isinstance(ckpt["model"], dict):
         ckpt = ckpt["model"]
-    sam3_image_ckpt = {
-        k.replace("detector.", ""): v for k, v in ckpt.items() if "detector" in k
-    }
+    sam3_image_ckpt = {k.replace("detector.", ""): v for k, v in ckpt.items() if "detector" in k}
     if model.inst_interactive_predictor is not None:
         sam3_image_ckpt.update(
-            {
-                k.replace("tracker.", "inst_interactive_predictor.model."): v
-                for k, v in ckpt.items()
-                if "tracker" in k
-            }
+            {k.replace("tracker.", "inst_interactive_predictor.model."): v for k, v in ckpt.items() if "tracker" in k}
         )
     missing_keys, _ = model.load_state_dict(sam3_image_ckpt, strict=False)
     if len(missing_keys) > 0:
-        print(
-            f"loaded {checkpoint_path} and found "
-            f"missing and/or unexpected keys:\n{missing_keys=}"
-        )
+        print(f"loaded {checkpoint_path} and found " f"missing and/or unexpected keys:\n{missing_keys=}")
 
 
 def _setup_device_and_mode(model, device, eval_mode):
@@ -585,10 +570,8 @@ def build_sam3_image_model(
         A SAM3 image model
     """
     if bpe_path is None:
-        bpe_path = os.path.join(
-            os.path.dirname(__file__), "..", "assets", "bpe_simple_vocab_16e6.txt.gz"
-        )
-    
+        bpe_path = os.path.join(os.path.dirname(__file__), "..", "assets", "bpe_simple_vocab_16e6.txt.gz")
+
     # Create visual components
     compile_mode = "default" if compile else None
     vision_encoder = _create_vision_backbone(
@@ -608,11 +591,7 @@ def build_sam3_image_model(
     dot_prod_scoring = _create_dot_product_scoring()
 
     # Create segmentation head if enabled
-    segmentation_head = (
-        _create_segmentation_head(compile_mode=compile_mode)
-        if enable_segmentation
-        else None
-    )
+    segmentation_head = _create_segmentation_head(compile_mode=compile_mode) if enable_segmentation else None
 
     # Create geometry encoder
     input_geometry_encoder = _create_geometry_encoder()
@@ -654,9 +633,9 @@ def download_ckpt_from_hf():
 
 
 def build_sam3_video_model(
-    checkpoint_path: Optional[str] = "/home/nightbreeze/research/ckpt/sam3/sam3.pt",
+    checkpoint_path: str | None = "/home/nightbreeze/research/ckpt/sam3/sam3.pt",
     load_from_HF=False,
-    bpe_path: Optional[str] = None,
+    bpe_path: str | None = None,
     has_presence_token: bool = True,
     geo_encoder_use_img_cross_attn: bool = True,
     strict_state_dict_loading: bool = True,
@@ -675,9 +654,7 @@ def build_sam3_video_model(
         Sam3VideoInferenceWithInstanceInteractivity: The instantiated dense tracking model
     """
     if bpe_path is None:
-        bpe_path = os.path.join(
-            os.path.dirname(__file__), "..", "assets", "bpe_simple_vocab_16e6.txt.gz"
-        )
+        bpe_path = os.path.join(os.path.dirname(__file__), "..", "assets", "bpe_simple_vocab_16e6.txt.gz")
 
     # Build Tracker module
     tracker = build_tracker(apply_temporal_disambiguation=apply_temporal_disambiguation)
@@ -700,9 +677,7 @@ def build_sam3_video_model(
         residual=True,
         out_norm=nn.LayerNorm(256),
     )
-    main_dot_prod_scoring = DotProductScoring(
-        d_model=256, d_proj=256, prompt_mlp=main_dot_prod_mlp
-    )
+    main_dot_prod_scoring = DotProductScoring(d_model=256, d_proj=256, prompt_mlp=main_dot_prod_mlp)
 
     # Build Detector module
     detector = Sam3ImageOnVideoMultiGPU(
@@ -782,9 +757,7 @@ def build_sam3_video_model(
         if "model" in ckpt and isinstance(ckpt["model"], dict):
             ckpt = ckpt["model"]
 
-        missing_keys, unexpected_keys = model.load_state_dict(
-            ckpt, strict=strict_state_dict_loading
-        )
+        missing_keys, unexpected_keys = model.load_state_dict(ckpt, strict=strict_state_dict_loading)
         if missing_keys:
             print(f"Missing keys: {missing_keys}")
         if unexpected_keys:
@@ -795,6 +768,4 @@ def build_sam3_video_model(
 
 
 def build_sam3_video_predictor(*model_args, gpus_to_use=None, **model_kwargs):
-    return Sam3VideoPredictorMultiGPU(
-        *model_args, gpus_to_use=gpus_to_use, **model_kwargs
-    )
+    return Sam3VideoPredictorMultiGPU(*model_args, gpus_to_use=gpus_to_use, **model_kwargs)

@@ -40,9 +40,7 @@ class _BaseMetric(ABC):
     def plot_single_tracker_results(self, all_res, tracker, output_folder, cls):
         """Plot results of metrics, only valid for metrics with self.plottable"""
         if self.plottable:
-            raise NotImplementedError(
-                "plot_results is not implemented for metric %s" % self.get_name()
-            )
+            raise NotImplementedError("plot_results is not implemented for metric %s" % self.get_name())
         else:
             pass
 
@@ -61,19 +59,15 @@ class _BaseMetric(ABC):
     @staticmethod
     def _combine_weighted_av(all_res, field, comb_res, weight_field):
         """Combine sequence results via weighted average"""
-        return sum(
-            [all_res[k][field] * all_res[k][weight_field] for k in all_res.keys()]
-        ) / np.maximum(1.0, comb_res[weight_field])
+        return sum([all_res[k][field] * all_res[k][weight_field] for k in all_res.keys()]) / np.maximum(
+            1.0, comb_res[weight_field]
+        )
 
-    def print_table(
-        self, table_res, tracker, cls, res_field="COMBINED_SEQ", output_lable="COMBINED"
-    ):
+    def print_table(self, table_res, tracker, cls, res_field="COMBINED_SEQ", output_lable="COMBINED"):
         """Prints table of results for all sequences"""
         print("")
         metric_name = self.get_name()
-        self._row_print(
-            [metric_name + ": " + tracker + "-" + cls] + self.summary_fields
-        )
+        self._row_print([metric_name + ": " + tracker + "-" + cls] + self.summary_fields)
         for seq, results in sorted(table_res.items()):
             if seq.startswith("COMBINED_SEQ"):
                 continue
@@ -92,9 +86,7 @@ class _BaseMetric(ABC):
             elif h in self.integer_fields:
                 vals.append("{0:d}".format(int(results_[h])))
             else:
-                raise NotImplementedError(
-                    "Summary function not implemented for this field type."
-                )
+                raise NotImplementedError("Summary function not implemented for this field type.")
         return vals
 
     @staticmethod
@@ -109,9 +101,7 @@ class _BaseMetric(ABC):
 
     def summary_results(self, table_res):
         """Returns a simple summary of final results for a tracker"""
-        return dict(
-            zip(self.summary_fields, self._summary_row(table_res["COMBINED_SEQ"]))
-        )
+        return dict(zip(self.summary_fields, self._summary_row(table_res["COMBINED_SEQ"])))
 
     def detailed_results(self, table_res):
         """Returns detailed final results for a tracker"""
@@ -128,8 +118,7 @@ class _BaseMetric(ABC):
             detailed_row = self._detailed_row(res)
             if len(detailed_row) != len(detailed_fields):
                 raise TrackEvalException(
-                    "Field names and data have different sizes (%i and %i)"
-                    % (len(detailed_row), len(detailed_fields))
+                    "Field names and data have different sizes (%i and %i)" % (len(detailed_row), len(detailed_fields))
                 )
             detailed_results[seq] = dict(zip(detailed_fields, detailed_row))
         return detailed_results

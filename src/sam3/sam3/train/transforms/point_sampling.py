@@ -2,12 +2,12 @@
 
 import cv2
 import numpy as np
-import torch
 from PIL import Image as PILImage
 from pycocotools import mask as mask_util
+import torch
+from torchvision.ops import masks_to_boxes
 
 from sam3.train.data.sam3_image_dataset import Datapoint
-from torchvision.ops import masks_to_boxes
 
 
 def sample_points_from_rle(rle, n_points, mode, box=None, normalize=True):
@@ -227,9 +227,7 @@ class RandomGeometricInputsAPI:
 
     def _sample_num_points_and_if_box(self):
         if isinstance(self.num_points, tuple):
-            n_points = torch.randint(
-                low=self.num_points[0], high=self.num_points[1], size=(1,)
-            ).item()
+            n_points = torch.randint(low=self.num_points[0], high=self.num_points[1], size=(1,)).item()
         else:
             n_points = self.num_points
         if self.box_chance > 0.0:
@@ -248,9 +246,7 @@ class RandomGeometricInputsAPI:
     def _get_target_object(self, datapoint, query):
         img = datapoint.images[query.image_id]
         targets = query.object_ids_output
-        assert (
-            len(targets) == 1
-        ), "Geometric queries only support a single target object."
+        assert len(targets) == 1, "Geometric queries only support a single target object."
         target_idx = targets[0]
         return img.objects[target_idx]
 
@@ -269,9 +265,7 @@ class RandomGeometricInputsAPI:
                 # is awkward, but this is all in the dataloader worker anyway
                 # on CPU and so I don't think it should matter.
                 if self.sample_box_scale_factor != 1.0:
-                    sample_box = rescale_box_xyxy(
-                        box.numpy(), self.sample_box_scale_factor, mask.shape
-                    )
+                    sample_box = rescale_box_xyxy(box.numpy(), self.sample_box_scale_factor, mask.shape)
                 else:
                     sample_box = box.numpy()
                 input_points = sample_points_from_mask(

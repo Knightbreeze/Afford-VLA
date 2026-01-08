@@ -2,7 +2,7 @@
 
 import base64
 import os
-from typing import Any, Optional
+from typing import Any
 
 from openai import OpenAI
 
@@ -62,19 +62,13 @@ def send_generate_request(
                     image_path = c["image"]
 
                     print("image_path", image_path)
-                    new_image_path = image_path.replace(
-                        "?", "%3F"
-                    )  # Escape ? in the path
+                    new_image_path = image_path.replace("?", "%3F")  # Escape ? in the path
 
                     # Read the image file and convert to base64
                     try:
-                        base64_image, mime_type = get_image_base64_and_mime(
-                            new_image_path
-                        )
+                        base64_image, mime_type = get_image_base64_and_mime(new_image_path)
                         if base64_image is None:
-                            print(
-                                f"Warning: Could not convert image to base64: {new_image_path}"
-                            )
+                            print(f"Warning: Could not convert image to base64: {new_image_path}")
                             continue
 
                         # Create the proper image_url structure with base64 data
@@ -116,9 +110,8 @@ def send_generate_request(
         # Extract the response content
         if response.choices and len(response.choices) > 0:
             return response.choices[0].message.content
-        else:
-            print(f"Unexpected response format: {response}")
-            return None
+        print(f"Unexpected response format: {response}")
+        return None
 
     except Exception as e:
         print(f"Request failed: {e}")
@@ -129,7 +122,7 @@ def send_direct_request(
     llm: Any,
     messages: list[dict[str, Any]],
     sampling_params: Any,
-) -> Optional[str]:
+) -> str | None:
     """
     Run inference on a vLLM model instance directly without using a server.
 
@@ -155,28 +148,20 @@ def send_direct_request(
                         new_image_path = image_path.replace("?", "%3F")
 
                         try:
-                            base64_image, mime_type = get_image_base64_and_mime(
-                                new_image_path
-                            )
+                            base64_image, mime_type = get_image_base64_and_mime(new_image_path)
                             if base64_image is None:
-                                print(
-                                    f"Warning: Could not convert image: {new_image_path}"
-                                )
+                                print(f"Warning: Could not convert image: {new_image_path}")
                                 continue
 
                             # vLLM expects image_url format
                             processed_content.append(
                                 {
                                     "type": "image_url",
-                                    "image_url": {
-                                        "url": f"data:{mime_type};base64,{base64_image}"
-                                    },
+                                    "image_url": {"url": f"data:{mime_type};base64,{base64_image}"},
                                 }
                             )
                         except Exception as e:
-                            print(
-                                f"Warning: Error processing image {new_image_path}: {e}"
-                            )
+                            print(f"Warning: Error processing image {new_image_path}: {e}")
                             continue
                     else:
                         processed_content.append(c)
@@ -196,9 +181,8 @@ def send_direct_request(
         if outputs and len(outputs) > 0:
             generated_text = outputs[0].outputs[0].text
             return generated_text
-        else:
-            print(f"Unexpected output format: {outputs}")
-            return None
+        print(f"Unexpected output format: {outputs}")
+        return None
 
     except Exception as e:
         print(f"Direct inference failed: {e}")

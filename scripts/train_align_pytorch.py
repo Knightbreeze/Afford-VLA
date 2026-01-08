@@ -38,15 +38,14 @@ import torch
 import torch.distributed as dist
 import torch.nn.parallel
 import tqdm
+from vggt.models.vggt import VGGT
 import wandb
 
 import openpi.models.pi0_config
-from openpi.models_pytorch import pi0_pytorch, pi0_align_pytorch, projectors
+from openpi.models_pytorch import projectors
 import openpi.shared.normalize as _normalize
 import openpi.training.config as _config
 import openpi.training.data_loader as _data
-
-from vggt.models.vggt import VGGT
 
 
 def init_logging():
@@ -416,10 +415,7 @@ def train_loop(config: _config.TrainConfig):
         enable_track=False,
         feature_only=True,
     ).to(device)
-    align_projector = projectors.AlignProjector(
-        model.LLM_width,
-        config.vggt_dim,
-        config.use_vlm_norm).to(device)
+    align_projector = projectors.AlignProjector(model.LLM_width, config.vggt_dim, config.use_vlm_norm).to(device)
 
     if hasattr(model, "gradient_checkpointing_enable"):
         enable_gradient_checkpointing = True
@@ -463,7 +459,7 @@ def train_loop(config: _config.TrainConfig):
         logging.info(f"Loading weights from: {config.pytorch_weight_path}")
         model_path = os.path.join(config.pytorch_weight_path, "model.safetensors")
         safetensors.torch.load_model(
-            (model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model), 
+            (model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model),
             model_path,
             strict=False,
         )

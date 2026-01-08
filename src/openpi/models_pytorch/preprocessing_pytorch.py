@@ -36,10 +36,10 @@ def preprocess_observation_pytorch(
     batch_shape = observation.state.shape[:-1]
 
     out_images = {}
-    original_images = {} # 第三视角
+    original_images = {}  # 第三视角
     for key in image_keys:
         image = observation.images[key]
-        
+
         if save_original and key in AFF_INPUT_IMAGE_KEY:
             original_images[key] = image.clone()
 
