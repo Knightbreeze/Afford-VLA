@@ -1,0 +1,3551 @@
+====================================================================================================
+SAM3 完整网络架构
+====================================================================================================
+
+总参数量: 840,509,750
+可训练参数: 840,509,750
+冻结参数: 0
+====================================================================================================
+
+====================================================================================================
+【Image Encoder】 - 465 层
+====================================================================================================
+
+1. backbone.vision_backbone.trunk.patch_embed.proj
+   类型: Conv2d
+   参数: 602,112
+   配置: out: 1024
+
+2. backbone.vision_backbone.trunk.blocks.0.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+3. backbone.vision_backbone.trunk.blocks.0.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+4. backbone.vision_backbone.trunk.blocks.0.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+5. backbone.vision_backbone.trunk.blocks.0.ls1
+   类型: Identity
+
+6. backbone.vision_backbone.trunk.blocks.0.drop_path
+   类型: Identity
+
+7. backbone.vision_backbone.trunk.blocks.0.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+8. backbone.vision_backbone.trunk.blocks.0.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+9. backbone.vision_backbone.trunk.blocks.0.mlp.act
+   类型: GELU
+
+10. backbone.vision_backbone.trunk.blocks.0.mlp.drop1
+   类型: Dropout
+
+11. backbone.vision_backbone.trunk.blocks.0.mlp.norm
+   类型: Identity
+
+12. backbone.vision_backbone.trunk.blocks.0.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+13. backbone.vision_backbone.trunk.blocks.0.mlp.drop2
+   类型: Dropout
+
+14. backbone.vision_backbone.trunk.blocks.0.ls2
+   类型: Identity
+
+15. backbone.vision_backbone.trunk.blocks.0.dropout
+   类型: Dropout
+
+16. backbone.vision_backbone.trunk.blocks.1.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+17. backbone.vision_backbone.trunk.blocks.1.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+18. backbone.vision_backbone.trunk.blocks.1.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+19. backbone.vision_backbone.trunk.blocks.1.ls1
+   类型: Identity
+
+20. backbone.vision_backbone.trunk.blocks.1.drop_path
+   类型: DropPath
+
+21. backbone.vision_backbone.trunk.blocks.1.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+22. backbone.vision_backbone.trunk.blocks.1.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+23. backbone.vision_backbone.trunk.blocks.1.mlp.act
+   类型: GELU
+
+24. backbone.vision_backbone.trunk.blocks.1.mlp.drop1
+   类型: Dropout
+
+25. backbone.vision_backbone.trunk.blocks.1.mlp.norm
+   类型: Identity
+
+26. backbone.vision_backbone.trunk.blocks.1.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+27. backbone.vision_backbone.trunk.blocks.1.mlp.drop2
+   类型: Dropout
+
+28. backbone.vision_backbone.trunk.blocks.1.ls2
+   类型: Identity
+
+29. backbone.vision_backbone.trunk.blocks.1.dropout
+   类型: Dropout
+
+30. backbone.vision_backbone.trunk.blocks.2.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+31. backbone.vision_backbone.trunk.blocks.2.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+32. backbone.vision_backbone.trunk.blocks.2.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+33. backbone.vision_backbone.trunk.blocks.2.ls1
+   类型: Identity
+
+34. backbone.vision_backbone.trunk.blocks.2.drop_path
+   类型: DropPath
+
+35. backbone.vision_backbone.trunk.blocks.2.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+36. backbone.vision_backbone.trunk.blocks.2.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+37. backbone.vision_backbone.trunk.blocks.2.mlp.act
+   类型: GELU
+
+38. backbone.vision_backbone.trunk.blocks.2.mlp.drop1
+   类型: Dropout
+
+39. backbone.vision_backbone.trunk.blocks.2.mlp.norm
+   类型: Identity
+
+40. backbone.vision_backbone.trunk.blocks.2.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+41. backbone.vision_backbone.trunk.blocks.2.mlp.drop2
+   类型: Dropout
+
+42. backbone.vision_backbone.trunk.blocks.2.ls2
+   类型: Identity
+
+43. backbone.vision_backbone.trunk.blocks.2.dropout
+   类型: Dropout
+
+44. backbone.vision_backbone.trunk.blocks.3.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+45. backbone.vision_backbone.trunk.blocks.3.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+46. backbone.vision_backbone.trunk.blocks.3.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+47. backbone.vision_backbone.trunk.blocks.3.ls1
+   类型: Identity
+
+48. backbone.vision_backbone.trunk.blocks.3.drop_path
+   类型: DropPath
+
+49. backbone.vision_backbone.trunk.blocks.3.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+50. backbone.vision_backbone.trunk.blocks.3.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+51. backbone.vision_backbone.trunk.blocks.3.mlp.act
+   类型: GELU
+
+52. backbone.vision_backbone.trunk.blocks.3.mlp.drop1
+   类型: Dropout
+
+53. backbone.vision_backbone.trunk.blocks.3.mlp.norm
+   类型: Identity
+
+54. backbone.vision_backbone.trunk.blocks.3.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+55. backbone.vision_backbone.trunk.blocks.3.mlp.drop2
+   类型: Dropout
+
+56. backbone.vision_backbone.trunk.blocks.3.ls2
+   类型: Identity
+
+57. backbone.vision_backbone.trunk.blocks.3.dropout
+   类型: Dropout
+
+58. backbone.vision_backbone.trunk.blocks.4.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+59. backbone.vision_backbone.trunk.blocks.4.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+60. backbone.vision_backbone.trunk.blocks.4.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+61. backbone.vision_backbone.trunk.blocks.4.ls1
+   类型: Identity
+
+62. backbone.vision_backbone.trunk.blocks.4.drop_path
+   类型: DropPath
+
+63. backbone.vision_backbone.trunk.blocks.4.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+64. backbone.vision_backbone.trunk.blocks.4.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+65. backbone.vision_backbone.trunk.blocks.4.mlp.act
+   类型: GELU
+
+66. backbone.vision_backbone.trunk.blocks.4.mlp.drop1
+   类型: Dropout
+
+67. backbone.vision_backbone.trunk.blocks.4.mlp.norm
+   类型: Identity
+
+68. backbone.vision_backbone.trunk.blocks.4.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+69. backbone.vision_backbone.trunk.blocks.4.mlp.drop2
+   类型: Dropout
+
+70. backbone.vision_backbone.trunk.blocks.4.ls2
+   类型: Identity
+
+71. backbone.vision_backbone.trunk.blocks.4.dropout
+   类型: Dropout
+
+72. backbone.vision_backbone.trunk.blocks.5.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+73. backbone.vision_backbone.trunk.blocks.5.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+74. backbone.vision_backbone.trunk.blocks.5.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+75. backbone.vision_backbone.trunk.blocks.5.ls1
+   类型: Identity
+
+76. backbone.vision_backbone.trunk.blocks.5.drop_path
+   类型: DropPath
+
+77. backbone.vision_backbone.trunk.blocks.5.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+78. backbone.vision_backbone.trunk.blocks.5.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+79. backbone.vision_backbone.trunk.blocks.5.mlp.act
+   类型: GELU
+
+80. backbone.vision_backbone.trunk.blocks.5.mlp.drop1
+   类型: Dropout
+
+81. backbone.vision_backbone.trunk.blocks.5.mlp.norm
+   类型: Identity
+
+82. backbone.vision_backbone.trunk.blocks.5.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+83. backbone.vision_backbone.trunk.blocks.5.mlp.drop2
+   类型: Dropout
+
+84. backbone.vision_backbone.trunk.blocks.5.ls2
+   类型: Identity
+
+85. backbone.vision_backbone.trunk.blocks.5.dropout
+   类型: Dropout
+
+86. backbone.vision_backbone.trunk.blocks.6.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+87. backbone.vision_backbone.trunk.blocks.6.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+88. backbone.vision_backbone.trunk.blocks.6.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+89. backbone.vision_backbone.trunk.blocks.6.ls1
+   类型: Identity
+
+90. backbone.vision_backbone.trunk.blocks.6.drop_path
+   类型: DropPath
+
+91. backbone.vision_backbone.trunk.blocks.6.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+92. backbone.vision_backbone.trunk.blocks.6.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+93. backbone.vision_backbone.trunk.blocks.6.mlp.act
+   类型: GELU
+
+94. backbone.vision_backbone.trunk.blocks.6.mlp.drop1
+   类型: Dropout
+
+95. backbone.vision_backbone.trunk.blocks.6.mlp.norm
+   类型: Identity
+
+96. backbone.vision_backbone.trunk.blocks.6.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+97. backbone.vision_backbone.trunk.blocks.6.mlp.drop2
+   类型: Dropout
+
+98. backbone.vision_backbone.trunk.blocks.6.ls2
+   类型: Identity
+
+99. backbone.vision_backbone.trunk.blocks.6.dropout
+   类型: Dropout
+
+100. backbone.vision_backbone.trunk.blocks.7.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+101. backbone.vision_backbone.trunk.blocks.7.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+102. backbone.vision_backbone.trunk.blocks.7.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+103. backbone.vision_backbone.trunk.blocks.7.ls1
+   类型: Identity
+
+104. backbone.vision_backbone.trunk.blocks.7.drop_path
+   类型: DropPath
+
+105. backbone.vision_backbone.trunk.blocks.7.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+106. backbone.vision_backbone.trunk.blocks.7.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+107. backbone.vision_backbone.trunk.blocks.7.mlp.act
+   类型: GELU
+
+108. backbone.vision_backbone.trunk.blocks.7.mlp.drop1
+   类型: Dropout
+
+109. backbone.vision_backbone.trunk.blocks.7.mlp.norm
+   类型: Identity
+
+110. backbone.vision_backbone.trunk.blocks.7.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+111. backbone.vision_backbone.trunk.blocks.7.mlp.drop2
+   类型: Dropout
+
+112. backbone.vision_backbone.trunk.blocks.7.ls2
+   类型: Identity
+
+113. backbone.vision_backbone.trunk.blocks.7.dropout
+   类型: Dropout
+
+114. backbone.vision_backbone.trunk.blocks.8.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+115. backbone.vision_backbone.trunk.blocks.8.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+116. backbone.vision_backbone.trunk.blocks.8.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+117. backbone.vision_backbone.trunk.blocks.8.ls1
+   类型: Identity
+
+118. backbone.vision_backbone.trunk.blocks.8.drop_path
+   类型: DropPath
+
+119. backbone.vision_backbone.trunk.blocks.8.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+120. backbone.vision_backbone.trunk.blocks.8.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+121. backbone.vision_backbone.trunk.blocks.8.mlp.act
+   类型: GELU
+
+122. backbone.vision_backbone.trunk.blocks.8.mlp.drop1
+   类型: Dropout
+
+123. backbone.vision_backbone.trunk.blocks.8.mlp.norm
+   类型: Identity
+
+124. backbone.vision_backbone.trunk.blocks.8.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+125. backbone.vision_backbone.trunk.blocks.8.mlp.drop2
+   类型: Dropout
+
+126. backbone.vision_backbone.trunk.blocks.8.ls2
+   类型: Identity
+
+127. backbone.vision_backbone.trunk.blocks.8.dropout
+   类型: Dropout
+
+128. backbone.vision_backbone.trunk.blocks.9.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+129. backbone.vision_backbone.trunk.blocks.9.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+130. backbone.vision_backbone.trunk.blocks.9.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+131. backbone.vision_backbone.trunk.blocks.9.ls1
+   类型: Identity
+
+132. backbone.vision_backbone.trunk.blocks.9.drop_path
+   类型: DropPath
+
+133. backbone.vision_backbone.trunk.blocks.9.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+134. backbone.vision_backbone.trunk.blocks.9.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+135. backbone.vision_backbone.trunk.blocks.9.mlp.act
+   类型: GELU
+
+136. backbone.vision_backbone.trunk.blocks.9.mlp.drop1
+   类型: Dropout
+
+137. backbone.vision_backbone.trunk.blocks.9.mlp.norm
+   类型: Identity
+
+138. backbone.vision_backbone.trunk.blocks.9.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+139. backbone.vision_backbone.trunk.blocks.9.mlp.drop2
+   类型: Dropout
+
+140. backbone.vision_backbone.trunk.blocks.9.ls2
+   类型: Identity
+
+141. backbone.vision_backbone.trunk.blocks.9.dropout
+   类型: Dropout
+
+142. backbone.vision_backbone.trunk.blocks.10.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+143. backbone.vision_backbone.trunk.blocks.10.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+144. backbone.vision_backbone.trunk.blocks.10.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+145. backbone.vision_backbone.trunk.blocks.10.ls1
+   类型: Identity
+
+146. backbone.vision_backbone.trunk.blocks.10.drop_path
+   类型: DropPath
+
+147. backbone.vision_backbone.trunk.blocks.10.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+148. backbone.vision_backbone.trunk.blocks.10.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+149. backbone.vision_backbone.trunk.blocks.10.mlp.act
+   类型: GELU
+
+150. backbone.vision_backbone.trunk.blocks.10.mlp.drop1
+   类型: Dropout
+
+151. backbone.vision_backbone.trunk.blocks.10.mlp.norm
+   类型: Identity
+
+152. backbone.vision_backbone.trunk.blocks.10.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+153. backbone.vision_backbone.trunk.blocks.10.mlp.drop2
+   类型: Dropout
+
+154. backbone.vision_backbone.trunk.blocks.10.ls2
+   类型: Identity
+
+155. backbone.vision_backbone.trunk.blocks.10.dropout
+   类型: Dropout
+
+156. backbone.vision_backbone.trunk.blocks.11.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+157. backbone.vision_backbone.trunk.blocks.11.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+158. backbone.vision_backbone.trunk.blocks.11.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+159. backbone.vision_backbone.trunk.blocks.11.ls1
+   类型: Identity
+
+160. backbone.vision_backbone.trunk.blocks.11.drop_path
+   类型: DropPath
+
+161. backbone.vision_backbone.trunk.blocks.11.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+162. backbone.vision_backbone.trunk.blocks.11.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+163. backbone.vision_backbone.trunk.blocks.11.mlp.act
+   类型: GELU
+
+164. backbone.vision_backbone.trunk.blocks.11.mlp.drop1
+   类型: Dropout
+
+165. backbone.vision_backbone.trunk.blocks.11.mlp.norm
+   类型: Identity
+
+166. backbone.vision_backbone.trunk.blocks.11.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+167. backbone.vision_backbone.trunk.blocks.11.mlp.drop2
+   类型: Dropout
+
+168. backbone.vision_backbone.trunk.blocks.11.ls2
+   类型: Identity
+
+169. backbone.vision_backbone.trunk.blocks.11.dropout
+   类型: Dropout
+
+170. backbone.vision_backbone.trunk.blocks.12.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+171. backbone.vision_backbone.trunk.blocks.12.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+172. backbone.vision_backbone.trunk.blocks.12.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+173. backbone.vision_backbone.trunk.blocks.12.ls1
+   类型: Identity
+
+174. backbone.vision_backbone.trunk.blocks.12.drop_path
+   类型: DropPath
+
+175. backbone.vision_backbone.trunk.blocks.12.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+176. backbone.vision_backbone.trunk.blocks.12.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+177. backbone.vision_backbone.trunk.blocks.12.mlp.act
+   类型: GELU
+
+178. backbone.vision_backbone.trunk.blocks.12.mlp.drop1
+   类型: Dropout
+
+179. backbone.vision_backbone.trunk.blocks.12.mlp.norm
+   类型: Identity
+
+180. backbone.vision_backbone.trunk.blocks.12.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+181. backbone.vision_backbone.trunk.blocks.12.mlp.drop2
+   类型: Dropout
+
+182. backbone.vision_backbone.trunk.blocks.12.ls2
+   类型: Identity
+
+183. backbone.vision_backbone.trunk.blocks.12.dropout
+   类型: Dropout
+
+184. backbone.vision_backbone.trunk.blocks.13.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+185. backbone.vision_backbone.trunk.blocks.13.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+186. backbone.vision_backbone.trunk.blocks.13.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+187. backbone.vision_backbone.trunk.blocks.13.ls1
+   类型: Identity
+
+188. backbone.vision_backbone.trunk.blocks.13.drop_path
+   类型: DropPath
+
+189. backbone.vision_backbone.trunk.blocks.13.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+190. backbone.vision_backbone.trunk.blocks.13.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+191. backbone.vision_backbone.trunk.blocks.13.mlp.act
+   类型: GELU
+
+192. backbone.vision_backbone.trunk.blocks.13.mlp.drop1
+   类型: Dropout
+
+193. backbone.vision_backbone.trunk.blocks.13.mlp.norm
+   类型: Identity
+
+194. backbone.vision_backbone.trunk.blocks.13.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+195. backbone.vision_backbone.trunk.blocks.13.mlp.drop2
+   类型: Dropout
+
+196. backbone.vision_backbone.trunk.blocks.13.ls2
+   类型: Identity
+
+197. backbone.vision_backbone.trunk.blocks.13.dropout
+   类型: Dropout
+
+198. backbone.vision_backbone.trunk.blocks.14.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+199. backbone.vision_backbone.trunk.blocks.14.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+200. backbone.vision_backbone.trunk.blocks.14.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+201. backbone.vision_backbone.trunk.blocks.14.ls1
+   类型: Identity
+
+202. backbone.vision_backbone.trunk.blocks.14.drop_path
+   类型: DropPath
+
+203. backbone.vision_backbone.trunk.blocks.14.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+204. backbone.vision_backbone.trunk.blocks.14.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+205. backbone.vision_backbone.trunk.blocks.14.mlp.act
+   类型: GELU
+
+206. backbone.vision_backbone.trunk.blocks.14.mlp.drop1
+   类型: Dropout
+
+207. backbone.vision_backbone.trunk.blocks.14.mlp.norm
+   类型: Identity
+
+208. backbone.vision_backbone.trunk.blocks.14.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+209. backbone.vision_backbone.trunk.blocks.14.mlp.drop2
+   类型: Dropout
+
+210. backbone.vision_backbone.trunk.blocks.14.ls2
+   类型: Identity
+
+211. backbone.vision_backbone.trunk.blocks.14.dropout
+   类型: Dropout
+
+212. backbone.vision_backbone.trunk.blocks.15.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+213. backbone.vision_backbone.trunk.blocks.15.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+214. backbone.vision_backbone.trunk.blocks.15.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+215. backbone.vision_backbone.trunk.blocks.15.ls1
+   类型: Identity
+
+216. backbone.vision_backbone.trunk.blocks.15.drop_path
+   类型: DropPath
+
+217. backbone.vision_backbone.trunk.blocks.15.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+218. backbone.vision_backbone.trunk.blocks.15.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+219. backbone.vision_backbone.trunk.blocks.15.mlp.act
+   类型: GELU
+
+220. backbone.vision_backbone.trunk.blocks.15.mlp.drop1
+   类型: Dropout
+
+221. backbone.vision_backbone.trunk.blocks.15.mlp.norm
+   类型: Identity
+
+222. backbone.vision_backbone.trunk.blocks.15.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+223. backbone.vision_backbone.trunk.blocks.15.mlp.drop2
+   类型: Dropout
+
+224. backbone.vision_backbone.trunk.blocks.15.ls2
+   类型: Identity
+
+225. backbone.vision_backbone.trunk.blocks.15.dropout
+   类型: Dropout
+
+226. backbone.vision_backbone.trunk.blocks.16.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+227. backbone.vision_backbone.trunk.blocks.16.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+228. backbone.vision_backbone.trunk.blocks.16.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+229. backbone.vision_backbone.trunk.blocks.16.ls1
+   类型: Identity
+
+230. backbone.vision_backbone.trunk.blocks.16.drop_path
+   类型: DropPath
+
+231. backbone.vision_backbone.trunk.blocks.16.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+232. backbone.vision_backbone.trunk.blocks.16.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+233. backbone.vision_backbone.trunk.blocks.16.mlp.act
+   类型: GELU
+
+234. backbone.vision_backbone.trunk.blocks.16.mlp.drop1
+   类型: Dropout
+
+235. backbone.vision_backbone.trunk.blocks.16.mlp.norm
+   类型: Identity
+
+236. backbone.vision_backbone.trunk.blocks.16.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+237. backbone.vision_backbone.trunk.blocks.16.mlp.drop2
+   类型: Dropout
+
+238. backbone.vision_backbone.trunk.blocks.16.ls2
+   类型: Identity
+
+239. backbone.vision_backbone.trunk.blocks.16.dropout
+   类型: Dropout
+
+240. backbone.vision_backbone.trunk.blocks.17.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+241. backbone.vision_backbone.trunk.blocks.17.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+242. backbone.vision_backbone.trunk.blocks.17.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+243. backbone.vision_backbone.trunk.blocks.17.ls1
+   类型: Identity
+
+244. backbone.vision_backbone.trunk.blocks.17.drop_path
+   类型: DropPath
+
+245. backbone.vision_backbone.trunk.blocks.17.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+246. backbone.vision_backbone.trunk.blocks.17.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+247. backbone.vision_backbone.trunk.blocks.17.mlp.act
+   类型: GELU
+
+248. backbone.vision_backbone.trunk.blocks.17.mlp.drop1
+   类型: Dropout
+
+249. backbone.vision_backbone.trunk.blocks.17.mlp.norm
+   类型: Identity
+
+250. backbone.vision_backbone.trunk.blocks.17.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+251. backbone.vision_backbone.trunk.blocks.17.mlp.drop2
+   类型: Dropout
+
+252. backbone.vision_backbone.trunk.blocks.17.ls2
+   类型: Identity
+
+253. backbone.vision_backbone.trunk.blocks.17.dropout
+   类型: Dropout
+
+254. backbone.vision_backbone.trunk.blocks.18.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+255. backbone.vision_backbone.trunk.blocks.18.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+256. backbone.vision_backbone.trunk.blocks.18.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+257. backbone.vision_backbone.trunk.blocks.18.ls1
+   类型: Identity
+
+258. backbone.vision_backbone.trunk.blocks.18.drop_path
+   类型: DropPath
+
+259. backbone.vision_backbone.trunk.blocks.18.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+260. backbone.vision_backbone.trunk.blocks.18.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+261. backbone.vision_backbone.trunk.blocks.18.mlp.act
+   类型: GELU
+
+262. backbone.vision_backbone.trunk.blocks.18.mlp.drop1
+   类型: Dropout
+
+263. backbone.vision_backbone.trunk.blocks.18.mlp.norm
+   类型: Identity
+
+264. backbone.vision_backbone.trunk.blocks.18.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+265. backbone.vision_backbone.trunk.blocks.18.mlp.drop2
+   类型: Dropout
+
+266. backbone.vision_backbone.trunk.blocks.18.ls2
+   类型: Identity
+
+267. backbone.vision_backbone.trunk.blocks.18.dropout
+   类型: Dropout
+
+268. backbone.vision_backbone.trunk.blocks.19.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+269. backbone.vision_backbone.trunk.blocks.19.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+270. backbone.vision_backbone.trunk.blocks.19.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+271. backbone.vision_backbone.trunk.blocks.19.ls1
+   类型: Identity
+
+272. backbone.vision_backbone.trunk.blocks.19.drop_path
+   类型: DropPath
+
+273. backbone.vision_backbone.trunk.blocks.19.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+274. backbone.vision_backbone.trunk.blocks.19.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+275. backbone.vision_backbone.trunk.blocks.19.mlp.act
+   类型: GELU
+
+276. backbone.vision_backbone.trunk.blocks.19.mlp.drop1
+   类型: Dropout
+
+277. backbone.vision_backbone.trunk.blocks.19.mlp.norm
+   类型: Identity
+
+278. backbone.vision_backbone.trunk.blocks.19.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+279. backbone.vision_backbone.trunk.blocks.19.mlp.drop2
+   类型: Dropout
+
+280. backbone.vision_backbone.trunk.blocks.19.ls2
+   类型: Identity
+
+281. backbone.vision_backbone.trunk.blocks.19.dropout
+   类型: Dropout
+
+282. backbone.vision_backbone.trunk.blocks.20.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+283. backbone.vision_backbone.trunk.blocks.20.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+284. backbone.vision_backbone.trunk.blocks.20.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+285. backbone.vision_backbone.trunk.blocks.20.ls1
+   类型: Identity
+
+286. backbone.vision_backbone.trunk.blocks.20.drop_path
+   类型: DropPath
+
+287. backbone.vision_backbone.trunk.blocks.20.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+288. backbone.vision_backbone.trunk.blocks.20.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+289. backbone.vision_backbone.trunk.blocks.20.mlp.act
+   类型: GELU
+
+290. backbone.vision_backbone.trunk.blocks.20.mlp.drop1
+   类型: Dropout
+
+291. backbone.vision_backbone.trunk.blocks.20.mlp.norm
+   类型: Identity
+
+292. backbone.vision_backbone.trunk.blocks.20.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+293. backbone.vision_backbone.trunk.blocks.20.mlp.drop2
+   类型: Dropout
+
+294. backbone.vision_backbone.trunk.blocks.20.ls2
+   类型: Identity
+
+295. backbone.vision_backbone.trunk.blocks.20.dropout
+   类型: Dropout
+
+296. backbone.vision_backbone.trunk.blocks.21.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+297. backbone.vision_backbone.trunk.blocks.21.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+298. backbone.vision_backbone.trunk.blocks.21.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+299. backbone.vision_backbone.trunk.blocks.21.ls1
+   类型: Identity
+
+300. backbone.vision_backbone.trunk.blocks.21.drop_path
+   类型: DropPath
+
+301. backbone.vision_backbone.trunk.blocks.21.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+302. backbone.vision_backbone.trunk.blocks.21.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+303. backbone.vision_backbone.trunk.blocks.21.mlp.act
+   类型: GELU
+
+304. backbone.vision_backbone.trunk.blocks.21.mlp.drop1
+   类型: Dropout
+
+305. backbone.vision_backbone.trunk.blocks.21.mlp.norm
+   类型: Identity
+
+306. backbone.vision_backbone.trunk.blocks.21.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+307. backbone.vision_backbone.trunk.blocks.21.mlp.drop2
+   类型: Dropout
+
+308. backbone.vision_backbone.trunk.blocks.21.ls2
+   类型: Identity
+
+309. backbone.vision_backbone.trunk.blocks.21.dropout
+   类型: Dropout
+
+310. backbone.vision_backbone.trunk.blocks.22.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+311. backbone.vision_backbone.trunk.blocks.22.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+312. backbone.vision_backbone.trunk.blocks.22.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+313. backbone.vision_backbone.trunk.blocks.22.ls1
+   类型: Identity
+
+314. backbone.vision_backbone.trunk.blocks.22.drop_path
+   类型: DropPath
+
+315. backbone.vision_backbone.trunk.blocks.22.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+316. backbone.vision_backbone.trunk.blocks.22.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+317. backbone.vision_backbone.trunk.blocks.22.mlp.act
+   类型: GELU
+
+318. backbone.vision_backbone.trunk.blocks.22.mlp.drop1
+   类型: Dropout
+
+319. backbone.vision_backbone.trunk.blocks.22.mlp.norm
+   类型: Identity
+
+320. backbone.vision_backbone.trunk.blocks.22.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+321. backbone.vision_backbone.trunk.blocks.22.mlp.drop2
+   类型: Dropout
+
+322. backbone.vision_backbone.trunk.blocks.22.ls2
+   类型: Identity
+
+323. backbone.vision_backbone.trunk.blocks.22.dropout
+   类型: Dropout
+
+324. backbone.vision_backbone.trunk.blocks.23.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+325. backbone.vision_backbone.trunk.blocks.23.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+326. backbone.vision_backbone.trunk.blocks.23.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+327. backbone.vision_backbone.trunk.blocks.23.ls1
+   类型: Identity
+
+328. backbone.vision_backbone.trunk.blocks.23.drop_path
+   类型: DropPath
+
+329. backbone.vision_backbone.trunk.blocks.23.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+330. backbone.vision_backbone.trunk.blocks.23.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+331. backbone.vision_backbone.trunk.blocks.23.mlp.act
+   类型: GELU
+
+332. backbone.vision_backbone.trunk.blocks.23.mlp.drop1
+   类型: Dropout
+
+333. backbone.vision_backbone.trunk.blocks.23.mlp.norm
+   类型: Identity
+
+334. backbone.vision_backbone.trunk.blocks.23.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+335. backbone.vision_backbone.trunk.blocks.23.mlp.drop2
+   类型: Dropout
+
+336. backbone.vision_backbone.trunk.blocks.23.ls2
+   类型: Identity
+
+337. backbone.vision_backbone.trunk.blocks.23.dropout
+   类型: Dropout
+
+338. backbone.vision_backbone.trunk.blocks.24.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+339. backbone.vision_backbone.trunk.blocks.24.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+340. backbone.vision_backbone.trunk.blocks.24.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+341. backbone.vision_backbone.trunk.blocks.24.ls1
+   类型: Identity
+
+342. backbone.vision_backbone.trunk.blocks.24.drop_path
+   类型: DropPath
+
+343. backbone.vision_backbone.trunk.blocks.24.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+344. backbone.vision_backbone.trunk.blocks.24.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+345. backbone.vision_backbone.trunk.blocks.24.mlp.act
+   类型: GELU
+
+346. backbone.vision_backbone.trunk.blocks.24.mlp.drop1
+   类型: Dropout
+
+347. backbone.vision_backbone.trunk.blocks.24.mlp.norm
+   类型: Identity
+
+348. backbone.vision_backbone.trunk.blocks.24.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+349. backbone.vision_backbone.trunk.blocks.24.mlp.drop2
+   类型: Dropout
+
+350. backbone.vision_backbone.trunk.blocks.24.ls2
+   类型: Identity
+
+351. backbone.vision_backbone.trunk.blocks.24.dropout
+   类型: Dropout
+
+352. backbone.vision_backbone.trunk.blocks.25.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+353. backbone.vision_backbone.trunk.blocks.25.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+354. backbone.vision_backbone.trunk.blocks.25.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+355. backbone.vision_backbone.trunk.blocks.25.ls1
+   类型: Identity
+
+356. backbone.vision_backbone.trunk.blocks.25.drop_path
+   类型: DropPath
+
+357. backbone.vision_backbone.trunk.blocks.25.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+358. backbone.vision_backbone.trunk.blocks.25.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+359. backbone.vision_backbone.trunk.blocks.25.mlp.act
+   类型: GELU
+
+360. backbone.vision_backbone.trunk.blocks.25.mlp.drop1
+   类型: Dropout
+
+361. backbone.vision_backbone.trunk.blocks.25.mlp.norm
+   类型: Identity
+
+362. backbone.vision_backbone.trunk.blocks.25.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+363. backbone.vision_backbone.trunk.blocks.25.mlp.drop2
+   类型: Dropout
+
+364. backbone.vision_backbone.trunk.blocks.25.ls2
+   类型: Identity
+
+365. backbone.vision_backbone.trunk.blocks.25.dropout
+   类型: Dropout
+
+366. backbone.vision_backbone.trunk.blocks.26.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+367. backbone.vision_backbone.trunk.blocks.26.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+368. backbone.vision_backbone.trunk.blocks.26.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+369. backbone.vision_backbone.trunk.blocks.26.ls1
+   类型: Identity
+
+370. backbone.vision_backbone.trunk.blocks.26.drop_path
+   类型: DropPath
+
+371. backbone.vision_backbone.trunk.blocks.26.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+372. backbone.vision_backbone.trunk.blocks.26.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+373. backbone.vision_backbone.trunk.blocks.26.mlp.act
+   类型: GELU
+
+374. backbone.vision_backbone.trunk.blocks.26.mlp.drop1
+   类型: Dropout
+
+375. backbone.vision_backbone.trunk.blocks.26.mlp.norm
+   类型: Identity
+
+376. backbone.vision_backbone.trunk.blocks.26.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+377. backbone.vision_backbone.trunk.blocks.26.mlp.drop2
+   类型: Dropout
+
+378. backbone.vision_backbone.trunk.blocks.26.ls2
+   类型: Identity
+
+379. backbone.vision_backbone.trunk.blocks.26.dropout
+   类型: Dropout
+
+380. backbone.vision_backbone.trunk.blocks.27.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+381. backbone.vision_backbone.trunk.blocks.27.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+382. backbone.vision_backbone.trunk.blocks.27.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+383. backbone.vision_backbone.trunk.blocks.27.ls1
+   类型: Identity
+
+384. backbone.vision_backbone.trunk.blocks.27.drop_path
+   类型: DropPath
+
+385. backbone.vision_backbone.trunk.blocks.27.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+386. backbone.vision_backbone.trunk.blocks.27.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+387. backbone.vision_backbone.trunk.blocks.27.mlp.act
+   类型: GELU
+
+388. backbone.vision_backbone.trunk.blocks.27.mlp.drop1
+   类型: Dropout
+
+389. backbone.vision_backbone.trunk.blocks.27.mlp.norm
+   类型: Identity
+
+390. backbone.vision_backbone.trunk.blocks.27.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+391. backbone.vision_backbone.trunk.blocks.27.mlp.drop2
+   类型: Dropout
+
+392. backbone.vision_backbone.trunk.blocks.27.ls2
+   类型: Identity
+
+393. backbone.vision_backbone.trunk.blocks.27.dropout
+   类型: Dropout
+
+394. backbone.vision_backbone.trunk.blocks.28.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+395. backbone.vision_backbone.trunk.blocks.28.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+396. backbone.vision_backbone.trunk.blocks.28.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+397. backbone.vision_backbone.trunk.blocks.28.ls1
+   类型: Identity
+
+398. backbone.vision_backbone.trunk.blocks.28.drop_path
+   类型: DropPath
+
+399. backbone.vision_backbone.trunk.blocks.28.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+400. backbone.vision_backbone.trunk.blocks.28.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+401. backbone.vision_backbone.trunk.blocks.28.mlp.act
+   类型: GELU
+
+402. backbone.vision_backbone.trunk.blocks.28.mlp.drop1
+   类型: Dropout
+
+403. backbone.vision_backbone.trunk.blocks.28.mlp.norm
+   类型: Identity
+
+404. backbone.vision_backbone.trunk.blocks.28.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+405. backbone.vision_backbone.trunk.blocks.28.mlp.drop2
+   类型: Dropout
+
+406. backbone.vision_backbone.trunk.blocks.28.ls2
+   类型: Identity
+
+407. backbone.vision_backbone.trunk.blocks.28.dropout
+   类型: Dropout
+
+408. backbone.vision_backbone.trunk.blocks.29.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+409. backbone.vision_backbone.trunk.blocks.29.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+410. backbone.vision_backbone.trunk.blocks.29.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+411. backbone.vision_backbone.trunk.blocks.29.ls1
+   类型: Identity
+
+412. backbone.vision_backbone.trunk.blocks.29.drop_path
+   类型: DropPath
+
+413. backbone.vision_backbone.trunk.blocks.29.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+414. backbone.vision_backbone.trunk.blocks.29.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+415. backbone.vision_backbone.trunk.blocks.29.mlp.act
+   类型: GELU
+
+416. backbone.vision_backbone.trunk.blocks.29.mlp.drop1
+   类型: Dropout
+
+417. backbone.vision_backbone.trunk.blocks.29.mlp.norm
+   类型: Identity
+
+418. backbone.vision_backbone.trunk.blocks.29.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+419. backbone.vision_backbone.trunk.blocks.29.mlp.drop2
+   类型: Dropout
+
+420. backbone.vision_backbone.trunk.blocks.29.ls2
+   类型: Identity
+
+421. backbone.vision_backbone.trunk.blocks.29.dropout
+   类型: Dropout
+
+422. backbone.vision_backbone.trunk.blocks.30.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+423. backbone.vision_backbone.trunk.blocks.30.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+424. backbone.vision_backbone.trunk.blocks.30.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+425. backbone.vision_backbone.trunk.blocks.30.ls1
+   类型: Identity
+
+426. backbone.vision_backbone.trunk.blocks.30.drop_path
+   类型: DropPath
+
+427. backbone.vision_backbone.trunk.blocks.30.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+428. backbone.vision_backbone.trunk.blocks.30.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+429. backbone.vision_backbone.trunk.blocks.30.mlp.act
+   类型: GELU
+
+430. backbone.vision_backbone.trunk.blocks.30.mlp.drop1
+   类型: Dropout
+
+431. backbone.vision_backbone.trunk.blocks.30.mlp.norm
+   类型: Identity
+
+432. backbone.vision_backbone.trunk.blocks.30.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+433. backbone.vision_backbone.trunk.blocks.30.mlp.drop2
+   类型: Dropout
+
+434. backbone.vision_backbone.trunk.blocks.30.ls2
+   类型: Identity
+
+435. backbone.vision_backbone.trunk.blocks.30.dropout
+   类型: Dropout
+
+436. backbone.vision_backbone.trunk.blocks.31.norm1
+   类型: LayerNorm
+   参数: 2,048
+
+437. backbone.vision_backbone.trunk.blocks.31.attn.qkv
+   类型: Linear
+   参数: 3,148,800
+   配置: out: 3072
+
+438. backbone.vision_backbone.trunk.blocks.31.attn.proj
+   类型: Linear
+   参数: 1,049,600
+   配置: out: 1024
+
+439. backbone.vision_backbone.trunk.blocks.31.ls1
+   类型: Identity
+
+440. backbone.vision_backbone.trunk.blocks.31.drop_path
+   类型: DropPath
+
+441. backbone.vision_backbone.trunk.blocks.31.norm2
+   类型: LayerNorm
+   参数: 2,048
+
+442. backbone.vision_backbone.trunk.blocks.31.mlp.fc1
+   类型: Linear
+   参数: 4,854,400
+   配置: out: 4736
+
+443. backbone.vision_backbone.trunk.blocks.31.mlp.act
+   类型: GELU
+
+444. backbone.vision_backbone.trunk.blocks.31.mlp.drop1
+   类型: Dropout
+
+445. backbone.vision_backbone.trunk.blocks.31.mlp.norm
+   类型: Identity
+
+446. backbone.vision_backbone.trunk.blocks.31.mlp.fc2
+   类型: Linear
+   参数: 4,850,688
+   配置: out: 1024
+
+447. backbone.vision_backbone.trunk.blocks.31.mlp.drop2
+   类型: Dropout
+
+448. backbone.vision_backbone.trunk.blocks.31.ls2
+   类型: Identity
+
+449. backbone.vision_backbone.trunk.blocks.31.dropout
+   类型: Dropout
+
+450. backbone.vision_backbone.trunk.ln_pre
+   类型: LayerNorm
+   参数: 2,048
+
+451. backbone.vision_backbone.trunk.ln_post
+   类型: Identity
+
+452. backbone.vision_backbone.position_encoding
+   类型: PositionEmbeddingSine
+
+453. backbone.vision_backbone.convs.0.dconv_2x2_0
+   类型: ConvTranspose2d
+   参数: 2,097,664
+   配置: out: 512
+
+454. backbone.vision_backbone.convs.0.gelu
+   类型: GELU
+
+455. backbone.vision_backbone.convs.0.dconv_2x2_1
+   类型: ConvTranspose2d
+   参数: 524,544
+   配置: out: 256
+
+456. backbone.vision_backbone.convs.0.conv_1x1
+   类型: Conv2d
+   参数: 65,792
+   配置: out: 256
+
+457. backbone.vision_backbone.convs.0.conv_3x3
+   类型: Conv2d
+   参数: 590,080
+   配置: out: 256
+
+458. backbone.vision_backbone.convs.1.dconv_2x2
+   类型: ConvTranspose2d
+   参数: 2,097,664
+   配置: out: 512
+
+459. backbone.vision_backbone.convs.1.conv_1x1
+   类型: Conv2d
+   参数: 131,328
+   配置: out: 256
+
+460. backbone.vision_backbone.convs.1.conv_3x3
+   类型: Conv2d
+   参数: 590,080
+   配置: out: 256
+
+461. backbone.vision_backbone.convs.2.conv_1x1
+   类型: Conv2d
+   参数: 262,400
+   配置: out: 256
+
+462. backbone.vision_backbone.convs.2.conv_3x3
+   类型: Conv2d
+   参数: 590,080
+   配置: out: 256
+
+463. backbone.vision_backbone.convs.3.maxpool_2x2
+   类型: MaxPool2d
+
+464. backbone.vision_backbone.convs.3.conv_1x1
+   类型: Conv2d
+   参数: 262,400
+   配置: out: 256
+
+465. backbone.vision_backbone.convs.3.conv_3x3
+   类型: Conv2d
+   参数: 590,080
+   配置: out: 256
+
+====================================================================================================
+【Text Encoder】 - 213 层
+====================================================================================================
+
+466. backbone.language_backbone.encoder.token_embedding
+   类型: Embedding
+   参数: 50,593,792
+
+467. backbone.language_backbone.encoder.transformer.resblocks.0.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+468. backbone.language_backbone.encoder.transformer.resblocks.0.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+469. backbone.language_backbone.encoder.transformer.resblocks.0.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+470. backbone.language_backbone.encoder.transformer.resblocks.0.ls_1
+   类型: Identity
+
+471. backbone.language_backbone.encoder.transformer.resblocks.0.ls_2
+   类型: Identity
+
+472. backbone.language_backbone.encoder.transformer.resblocks.0.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+473. backbone.language_backbone.encoder.transformer.resblocks.0.mlp.gelu
+   类型: GELU
+
+474. backbone.language_backbone.encoder.transformer.resblocks.0.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+475. backbone.language_backbone.encoder.transformer.resblocks.1.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+476. backbone.language_backbone.encoder.transformer.resblocks.1.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+477. backbone.language_backbone.encoder.transformer.resblocks.1.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+478. backbone.language_backbone.encoder.transformer.resblocks.1.ls_1
+   类型: Identity
+
+479. backbone.language_backbone.encoder.transformer.resblocks.1.ls_2
+   类型: Identity
+
+480. backbone.language_backbone.encoder.transformer.resblocks.1.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+481. backbone.language_backbone.encoder.transformer.resblocks.1.mlp.gelu
+   类型: GELU
+
+482. backbone.language_backbone.encoder.transformer.resblocks.1.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+483. backbone.language_backbone.encoder.transformer.resblocks.2.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+484. backbone.language_backbone.encoder.transformer.resblocks.2.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+485. backbone.language_backbone.encoder.transformer.resblocks.2.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+486. backbone.language_backbone.encoder.transformer.resblocks.2.ls_1
+   类型: Identity
+
+487. backbone.language_backbone.encoder.transformer.resblocks.2.ls_2
+   类型: Identity
+
+488. backbone.language_backbone.encoder.transformer.resblocks.2.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+489. backbone.language_backbone.encoder.transformer.resblocks.2.mlp.gelu
+   类型: GELU
+
+490. backbone.language_backbone.encoder.transformer.resblocks.2.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+491. backbone.language_backbone.encoder.transformer.resblocks.3.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+492. backbone.language_backbone.encoder.transformer.resblocks.3.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+493. backbone.language_backbone.encoder.transformer.resblocks.3.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+494. backbone.language_backbone.encoder.transformer.resblocks.3.ls_1
+   类型: Identity
+
+495. backbone.language_backbone.encoder.transformer.resblocks.3.ls_2
+   类型: Identity
+
+496. backbone.language_backbone.encoder.transformer.resblocks.3.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+497. backbone.language_backbone.encoder.transformer.resblocks.3.mlp.gelu
+   类型: GELU
+
+498. backbone.language_backbone.encoder.transformer.resblocks.3.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+499. backbone.language_backbone.encoder.transformer.resblocks.4.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+500. backbone.language_backbone.encoder.transformer.resblocks.4.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+501. backbone.language_backbone.encoder.transformer.resblocks.4.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+502. backbone.language_backbone.encoder.transformer.resblocks.4.ls_1
+   类型: Identity
+
+503. backbone.language_backbone.encoder.transformer.resblocks.4.ls_2
+   类型: Identity
+
+504. backbone.language_backbone.encoder.transformer.resblocks.4.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+505. backbone.language_backbone.encoder.transformer.resblocks.4.mlp.gelu
+   类型: GELU
+
+506. backbone.language_backbone.encoder.transformer.resblocks.4.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+507. backbone.language_backbone.encoder.transformer.resblocks.5.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+508. backbone.language_backbone.encoder.transformer.resblocks.5.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+509. backbone.language_backbone.encoder.transformer.resblocks.5.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+510. backbone.language_backbone.encoder.transformer.resblocks.5.ls_1
+   类型: Identity
+
+511. backbone.language_backbone.encoder.transformer.resblocks.5.ls_2
+   类型: Identity
+
+512. backbone.language_backbone.encoder.transformer.resblocks.5.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+513. backbone.language_backbone.encoder.transformer.resblocks.5.mlp.gelu
+   类型: GELU
+
+514. backbone.language_backbone.encoder.transformer.resblocks.5.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+515. backbone.language_backbone.encoder.transformer.resblocks.6.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+516. backbone.language_backbone.encoder.transformer.resblocks.6.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+517. backbone.language_backbone.encoder.transformer.resblocks.6.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+518. backbone.language_backbone.encoder.transformer.resblocks.6.ls_1
+   类型: Identity
+
+519. backbone.language_backbone.encoder.transformer.resblocks.6.ls_2
+   类型: Identity
+
+520. backbone.language_backbone.encoder.transformer.resblocks.6.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+521. backbone.language_backbone.encoder.transformer.resblocks.6.mlp.gelu
+   类型: GELU
+
+522. backbone.language_backbone.encoder.transformer.resblocks.6.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+523. backbone.language_backbone.encoder.transformer.resblocks.7.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+524. backbone.language_backbone.encoder.transformer.resblocks.7.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+525. backbone.language_backbone.encoder.transformer.resblocks.7.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+526. backbone.language_backbone.encoder.transformer.resblocks.7.ls_1
+   类型: Identity
+
+527. backbone.language_backbone.encoder.transformer.resblocks.7.ls_2
+   类型: Identity
+
+528. backbone.language_backbone.encoder.transformer.resblocks.7.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+529. backbone.language_backbone.encoder.transformer.resblocks.7.mlp.gelu
+   类型: GELU
+
+530. backbone.language_backbone.encoder.transformer.resblocks.7.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+531. backbone.language_backbone.encoder.transformer.resblocks.8.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+532. backbone.language_backbone.encoder.transformer.resblocks.8.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+533. backbone.language_backbone.encoder.transformer.resblocks.8.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+534. backbone.language_backbone.encoder.transformer.resblocks.8.ls_1
+   类型: Identity
+
+535. backbone.language_backbone.encoder.transformer.resblocks.8.ls_2
+   类型: Identity
+
+536. backbone.language_backbone.encoder.transformer.resblocks.8.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+537. backbone.language_backbone.encoder.transformer.resblocks.8.mlp.gelu
+   类型: GELU
+
+538. backbone.language_backbone.encoder.transformer.resblocks.8.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+539. backbone.language_backbone.encoder.transformer.resblocks.9.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+540. backbone.language_backbone.encoder.transformer.resblocks.9.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+541. backbone.language_backbone.encoder.transformer.resblocks.9.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+542. backbone.language_backbone.encoder.transformer.resblocks.9.ls_1
+   类型: Identity
+
+543. backbone.language_backbone.encoder.transformer.resblocks.9.ls_2
+   类型: Identity
+
+544. backbone.language_backbone.encoder.transformer.resblocks.9.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+545. backbone.language_backbone.encoder.transformer.resblocks.9.mlp.gelu
+   类型: GELU
+
+546. backbone.language_backbone.encoder.transformer.resblocks.9.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+547. backbone.language_backbone.encoder.transformer.resblocks.10.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+548. backbone.language_backbone.encoder.transformer.resblocks.10.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+549. backbone.language_backbone.encoder.transformer.resblocks.10.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+550. backbone.language_backbone.encoder.transformer.resblocks.10.ls_1
+   类型: Identity
+
+551. backbone.language_backbone.encoder.transformer.resblocks.10.ls_2
+   类型: Identity
+
+552. backbone.language_backbone.encoder.transformer.resblocks.10.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+553. backbone.language_backbone.encoder.transformer.resblocks.10.mlp.gelu
+   类型: GELU
+
+554. backbone.language_backbone.encoder.transformer.resblocks.10.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+555. backbone.language_backbone.encoder.transformer.resblocks.11.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+556. backbone.language_backbone.encoder.transformer.resblocks.11.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+557. backbone.language_backbone.encoder.transformer.resblocks.11.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+558. backbone.language_backbone.encoder.transformer.resblocks.11.ls_1
+   类型: Identity
+
+559. backbone.language_backbone.encoder.transformer.resblocks.11.ls_2
+   类型: Identity
+
+560. backbone.language_backbone.encoder.transformer.resblocks.11.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+561. backbone.language_backbone.encoder.transformer.resblocks.11.mlp.gelu
+   类型: GELU
+
+562. backbone.language_backbone.encoder.transformer.resblocks.11.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+563. backbone.language_backbone.encoder.transformer.resblocks.12.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+564. backbone.language_backbone.encoder.transformer.resblocks.12.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+565. backbone.language_backbone.encoder.transformer.resblocks.12.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+566. backbone.language_backbone.encoder.transformer.resblocks.12.ls_1
+   类型: Identity
+
+567. backbone.language_backbone.encoder.transformer.resblocks.12.ls_2
+   类型: Identity
+
+568. backbone.language_backbone.encoder.transformer.resblocks.12.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+569. backbone.language_backbone.encoder.transformer.resblocks.12.mlp.gelu
+   类型: GELU
+
+570. backbone.language_backbone.encoder.transformer.resblocks.12.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+571. backbone.language_backbone.encoder.transformer.resblocks.13.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+572. backbone.language_backbone.encoder.transformer.resblocks.13.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+573. backbone.language_backbone.encoder.transformer.resblocks.13.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+574. backbone.language_backbone.encoder.transformer.resblocks.13.ls_1
+   类型: Identity
+
+575. backbone.language_backbone.encoder.transformer.resblocks.13.ls_2
+   类型: Identity
+
+576. backbone.language_backbone.encoder.transformer.resblocks.13.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+577. backbone.language_backbone.encoder.transformer.resblocks.13.mlp.gelu
+   类型: GELU
+
+578. backbone.language_backbone.encoder.transformer.resblocks.13.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+579. backbone.language_backbone.encoder.transformer.resblocks.14.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+580. backbone.language_backbone.encoder.transformer.resblocks.14.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+581. backbone.language_backbone.encoder.transformer.resblocks.14.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+582. backbone.language_backbone.encoder.transformer.resblocks.14.ls_1
+   类型: Identity
+
+583. backbone.language_backbone.encoder.transformer.resblocks.14.ls_2
+   类型: Identity
+
+584. backbone.language_backbone.encoder.transformer.resblocks.14.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+585. backbone.language_backbone.encoder.transformer.resblocks.14.mlp.gelu
+   类型: GELU
+
+586. backbone.language_backbone.encoder.transformer.resblocks.14.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+587. backbone.language_backbone.encoder.transformer.resblocks.15.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+588. backbone.language_backbone.encoder.transformer.resblocks.15.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+589. backbone.language_backbone.encoder.transformer.resblocks.15.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+590. backbone.language_backbone.encoder.transformer.resblocks.15.ls_1
+   类型: Identity
+
+591. backbone.language_backbone.encoder.transformer.resblocks.15.ls_2
+   类型: Identity
+
+592. backbone.language_backbone.encoder.transformer.resblocks.15.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+593. backbone.language_backbone.encoder.transformer.resblocks.15.mlp.gelu
+   类型: GELU
+
+594. backbone.language_backbone.encoder.transformer.resblocks.15.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+595. backbone.language_backbone.encoder.transformer.resblocks.16.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+596. backbone.language_backbone.encoder.transformer.resblocks.16.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+597. backbone.language_backbone.encoder.transformer.resblocks.16.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+598. backbone.language_backbone.encoder.transformer.resblocks.16.ls_1
+   类型: Identity
+
+599. backbone.language_backbone.encoder.transformer.resblocks.16.ls_2
+   类型: Identity
+
+600. backbone.language_backbone.encoder.transformer.resblocks.16.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+601. backbone.language_backbone.encoder.transformer.resblocks.16.mlp.gelu
+   类型: GELU
+
+602. backbone.language_backbone.encoder.transformer.resblocks.16.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+603. backbone.language_backbone.encoder.transformer.resblocks.17.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+604. backbone.language_backbone.encoder.transformer.resblocks.17.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+605. backbone.language_backbone.encoder.transformer.resblocks.17.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+606. backbone.language_backbone.encoder.transformer.resblocks.17.ls_1
+   类型: Identity
+
+607. backbone.language_backbone.encoder.transformer.resblocks.17.ls_2
+   类型: Identity
+
+608. backbone.language_backbone.encoder.transformer.resblocks.17.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+609. backbone.language_backbone.encoder.transformer.resblocks.17.mlp.gelu
+   类型: GELU
+
+610. backbone.language_backbone.encoder.transformer.resblocks.17.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+611. backbone.language_backbone.encoder.transformer.resblocks.18.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+612. backbone.language_backbone.encoder.transformer.resblocks.18.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+613. backbone.language_backbone.encoder.transformer.resblocks.18.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+614. backbone.language_backbone.encoder.transformer.resblocks.18.ls_1
+   类型: Identity
+
+615. backbone.language_backbone.encoder.transformer.resblocks.18.ls_2
+   类型: Identity
+
+616. backbone.language_backbone.encoder.transformer.resblocks.18.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+617. backbone.language_backbone.encoder.transformer.resblocks.18.mlp.gelu
+   类型: GELU
+
+618. backbone.language_backbone.encoder.transformer.resblocks.18.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+619. backbone.language_backbone.encoder.transformer.resblocks.19.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+620. backbone.language_backbone.encoder.transformer.resblocks.19.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+621. backbone.language_backbone.encoder.transformer.resblocks.19.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+622. backbone.language_backbone.encoder.transformer.resblocks.19.ls_1
+   类型: Identity
+
+623. backbone.language_backbone.encoder.transformer.resblocks.19.ls_2
+   类型: Identity
+
+624. backbone.language_backbone.encoder.transformer.resblocks.19.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+625. backbone.language_backbone.encoder.transformer.resblocks.19.mlp.gelu
+   类型: GELU
+
+626. backbone.language_backbone.encoder.transformer.resblocks.19.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+627. backbone.language_backbone.encoder.transformer.resblocks.20.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+628. backbone.language_backbone.encoder.transformer.resblocks.20.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+629. backbone.language_backbone.encoder.transformer.resblocks.20.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+630. backbone.language_backbone.encoder.transformer.resblocks.20.ls_1
+   类型: Identity
+
+631. backbone.language_backbone.encoder.transformer.resblocks.20.ls_2
+   类型: Identity
+
+632. backbone.language_backbone.encoder.transformer.resblocks.20.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+633. backbone.language_backbone.encoder.transformer.resblocks.20.mlp.gelu
+   类型: GELU
+
+634. backbone.language_backbone.encoder.transformer.resblocks.20.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+635. backbone.language_backbone.encoder.transformer.resblocks.21.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+636. backbone.language_backbone.encoder.transformer.resblocks.21.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+637. backbone.language_backbone.encoder.transformer.resblocks.21.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+638. backbone.language_backbone.encoder.transformer.resblocks.21.ls_1
+   类型: Identity
+
+639. backbone.language_backbone.encoder.transformer.resblocks.21.ls_2
+   类型: Identity
+
+640. backbone.language_backbone.encoder.transformer.resblocks.21.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+641. backbone.language_backbone.encoder.transformer.resblocks.21.mlp.gelu
+   类型: GELU
+
+642. backbone.language_backbone.encoder.transformer.resblocks.21.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+643. backbone.language_backbone.encoder.transformer.resblocks.22.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+644. backbone.language_backbone.encoder.transformer.resblocks.22.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+645. backbone.language_backbone.encoder.transformer.resblocks.22.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+646. backbone.language_backbone.encoder.transformer.resblocks.22.ls_1
+   类型: Identity
+
+647. backbone.language_backbone.encoder.transformer.resblocks.22.ls_2
+   类型: Identity
+
+648. backbone.language_backbone.encoder.transformer.resblocks.22.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+649. backbone.language_backbone.encoder.transformer.resblocks.22.mlp.gelu
+   类型: GELU
+
+650. backbone.language_backbone.encoder.transformer.resblocks.22.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+651. backbone.language_backbone.encoder.transformer.resblocks.23.attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 1,049,600
+   配置: out: 1024
+
+652. backbone.language_backbone.encoder.transformer.resblocks.23.ln_1
+   类型: LayerNorm
+   参数: 2,048
+
+653. backbone.language_backbone.encoder.transformer.resblocks.23.ln_2
+   类型: LayerNorm
+   参数: 2,048
+
+654. backbone.language_backbone.encoder.transformer.resblocks.23.ls_1
+   类型: Identity
+
+655. backbone.language_backbone.encoder.transformer.resblocks.23.ls_2
+   类型: Identity
+
+656. backbone.language_backbone.encoder.transformer.resblocks.23.mlp.c_fc
+   类型: Linear
+   参数: 4,198,400
+   配置: out: 4096
+
+657. backbone.language_backbone.encoder.transformer.resblocks.23.mlp.gelu
+   类型: GELU
+
+658. backbone.language_backbone.encoder.transformer.resblocks.23.mlp.c_proj
+   类型: Linear
+   参数: 4,195,328
+   配置: out: 1024
+
+659. backbone.language_backbone.encoder.ln_final
+   类型: LayerNorm
+   参数: 2,048
+
+660. backbone.language_backbone.resizer
+   类型: Linear
+   参数: 262,400
+   配置: out: 256
+
+661. transformer.decoder.layers.0.ca_text.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+662. transformer.decoder.layers.0.catext_dropout
+   类型: Dropout
+
+663. transformer.decoder.layers.0.catext_norm
+   类型: LayerNorm
+   参数: 512
+
+664. transformer.decoder.layers.1.ca_text.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+665. transformer.decoder.layers.1.catext_dropout
+   类型: Dropout
+
+666. transformer.decoder.layers.1.catext_norm
+   类型: LayerNorm
+   参数: 512
+
+667. transformer.decoder.layers.2.ca_text.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+668. transformer.decoder.layers.2.catext_dropout
+   类型: Dropout
+
+669. transformer.decoder.layers.2.catext_norm
+   类型: LayerNorm
+   参数: 512
+
+670. transformer.decoder.layers.3.ca_text.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+671. transformer.decoder.layers.3.catext_dropout
+   类型: Dropout
+
+672. transformer.decoder.layers.3.catext_norm
+   类型: LayerNorm
+   参数: 512
+
+673. transformer.decoder.layers.4.ca_text.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+674. transformer.decoder.layers.4.catext_dropout
+   类型: Dropout
+
+675. transformer.decoder.layers.4.catext_norm
+   类型: LayerNorm
+   参数: 512
+
+676. transformer.decoder.layers.5.ca_text.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+677. transformer.decoder.layers.5.catext_dropout
+   类型: Dropout
+
+678. transformer.decoder.layers.5.catext_norm
+   类型: LayerNorm
+   参数: 512
+
+====================================================================================================
+【Decoder】 - 99 层
+====================================================================================================
+
+679. transformer.decoder.layers.0.cross_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+680. transformer.decoder.layers.0.dropout1
+   类型: Dropout
+
+681. transformer.decoder.layers.0.norm1
+   类型: LayerNorm
+   参数: 512
+
+682. transformer.decoder.layers.0.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+683. transformer.decoder.layers.0.dropout2
+   类型: Dropout
+
+684. transformer.decoder.layers.0.norm2
+   类型: LayerNorm
+   参数: 512
+
+685. transformer.decoder.layers.0.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+686. transformer.decoder.layers.0.dropout3
+   类型: Dropout
+
+687. transformer.decoder.layers.0.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+688. transformer.decoder.layers.0.dropout4
+   类型: Dropout
+
+689. transformer.decoder.layers.0.norm3
+   类型: LayerNorm
+   参数: 512
+
+690. transformer.decoder.layers.1.cross_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+691. transformer.decoder.layers.1.dropout1
+   类型: Dropout
+
+692. transformer.decoder.layers.1.norm1
+   类型: LayerNorm
+   参数: 512
+
+693. transformer.decoder.layers.1.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+694. transformer.decoder.layers.1.dropout2
+   类型: Dropout
+
+695. transformer.decoder.layers.1.norm2
+   类型: LayerNorm
+   参数: 512
+
+696. transformer.decoder.layers.1.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+697. transformer.decoder.layers.1.dropout3
+   类型: Dropout
+
+698. transformer.decoder.layers.1.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+699. transformer.decoder.layers.1.dropout4
+   类型: Dropout
+
+700. transformer.decoder.layers.1.norm3
+   类型: LayerNorm
+   参数: 512
+
+701. transformer.decoder.layers.2.cross_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+702. transformer.decoder.layers.2.dropout1
+   类型: Dropout
+
+703. transformer.decoder.layers.2.norm1
+   类型: LayerNorm
+   参数: 512
+
+704. transformer.decoder.layers.2.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+705. transformer.decoder.layers.2.dropout2
+   类型: Dropout
+
+706. transformer.decoder.layers.2.norm2
+   类型: LayerNorm
+   参数: 512
+
+707. transformer.decoder.layers.2.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+708. transformer.decoder.layers.2.dropout3
+   类型: Dropout
+
+709. transformer.decoder.layers.2.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+710. transformer.decoder.layers.2.dropout4
+   类型: Dropout
+
+711. transformer.decoder.layers.2.norm3
+   类型: LayerNorm
+   参数: 512
+
+712. transformer.decoder.layers.3.cross_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+713. transformer.decoder.layers.3.dropout1
+   类型: Dropout
+
+714. transformer.decoder.layers.3.norm1
+   类型: LayerNorm
+   参数: 512
+
+715. transformer.decoder.layers.3.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+716. transformer.decoder.layers.3.dropout2
+   类型: Dropout
+
+717. transformer.decoder.layers.3.norm2
+   类型: LayerNorm
+   参数: 512
+
+718. transformer.decoder.layers.3.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+719. transformer.decoder.layers.3.dropout3
+   类型: Dropout
+
+720. transformer.decoder.layers.3.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+721. transformer.decoder.layers.3.dropout4
+   类型: Dropout
+
+722. transformer.decoder.layers.3.norm3
+   类型: LayerNorm
+   参数: 512
+
+723. transformer.decoder.layers.4.cross_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+724. transformer.decoder.layers.4.dropout1
+   类型: Dropout
+
+725. transformer.decoder.layers.4.norm1
+   类型: LayerNorm
+   参数: 512
+
+726. transformer.decoder.layers.4.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+727. transformer.decoder.layers.4.dropout2
+   类型: Dropout
+
+728. transformer.decoder.layers.4.norm2
+   类型: LayerNorm
+   参数: 512
+
+729. transformer.decoder.layers.4.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+730. transformer.decoder.layers.4.dropout3
+   类型: Dropout
+
+731. transformer.decoder.layers.4.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+732. transformer.decoder.layers.4.dropout4
+   类型: Dropout
+
+733. transformer.decoder.layers.4.norm3
+   类型: LayerNorm
+   参数: 512
+
+734. transformer.decoder.layers.5.cross_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+735. transformer.decoder.layers.5.dropout1
+   类型: Dropout
+
+736. transformer.decoder.layers.5.norm1
+   类型: LayerNorm
+   参数: 512
+
+737. transformer.decoder.layers.5.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+738. transformer.decoder.layers.5.dropout2
+   类型: Dropout
+
+739. transformer.decoder.layers.5.norm2
+   类型: LayerNorm
+   参数: 512
+
+740. transformer.decoder.layers.5.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+741. transformer.decoder.layers.5.dropout3
+   类型: Dropout
+
+742. transformer.decoder.layers.5.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+743. transformer.decoder.layers.5.dropout4
+   类型: Dropout
+
+744. transformer.decoder.layers.5.norm3
+   类型: LayerNorm
+   参数: 512
+
+745. transformer.decoder.norm
+   类型: LayerNorm
+   参数: 512
+
+746. transformer.decoder.bbox_embed.layers.0
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+747. transformer.decoder.bbox_embed.layers.1
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+748. transformer.decoder.bbox_embed.layers.2
+   类型: Linear
+   参数: 1,028
+   配置: out: 4
+
+749. transformer.decoder.bbox_embed.drop
+   类型: Identity
+
+750. transformer.decoder.bbox_embed.out_norm
+   类型: Identity
+
+751. transformer.decoder.query_embed
+   类型: Embedding
+   参数: 51,200
+
+752. transformer.decoder.reference_points
+   类型: Embedding
+   参数: 800
+
+753. transformer.decoder.boxRPB_embed_x.layers.0
+   类型: Linear
+   参数: 768
+   配置: out: 256
+
+754. transformer.decoder.boxRPB_embed_x.layers.1
+   类型: Linear
+   参数: 2,056
+   配置: out: 8
+
+755. transformer.decoder.boxRPB_embed_x.drop
+   类型: Identity
+
+756. transformer.decoder.boxRPB_embed_x.out_norm
+   类型: Identity
+
+757. transformer.decoder.boxRPB_embed_y.layers.0
+   类型: Linear
+   参数: 768
+   配置: out: 256
+
+758. transformer.decoder.boxRPB_embed_y.layers.1
+   类型: Linear
+   参数: 2,056
+   配置: out: 8
+
+759. transformer.decoder.boxRPB_embed_y.drop
+   类型: Identity
+
+760. transformer.decoder.boxRPB_embed_y.out_norm
+   类型: Identity
+
+761. transformer.decoder.presence_token
+   类型: Embedding
+   参数: 256
+
+762. transformer.decoder.presence_token_head.layers.0
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+763. transformer.decoder.presence_token_head.layers.1
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+764. transformer.decoder.presence_token_head.layers.2
+   类型: Linear
+   参数: 257
+   配置: out: 1
+
+765. transformer.decoder.presence_token_head.drop
+   类型: Identity
+
+766. transformer.decoder.presence_token_head.out_norm
+   类型: Identity
+
+767. transformer.decoder.presence_token_out_norm
+   类型: LayerNorm
+   参数: 512
+
+768. transformer.decoder.ref_point_head.layers.0
+   类型: Linear
+   参数: 131,328
+   配置: out: 256
+
+769. transformer.decoder.ref_point_head.layers.1
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+770. transformer.decoder.ref_point_head.drop
+   类型: Identity
+
+771. transformer.decoder.ref_point_head.out_norm
+   类型: Identity
+
+772. segmentation_head.pixel_decoder.conv_layers.0
+   类型: Conv2d
+   参数: 590,080
+   配置: out: 256
+
+773. segmentation_head.pixel_decoder.conv_layers.1
+   类型: Conv2d
+   参数: 590,080
+   配置: out: 256
+
+774. segmentation_head.pixel_decoder.conv_layers.2
+   类型: Conv2d
+   参数: 590,080
+   配置: out: 256
+
+775. segmentation_head.pixel_decoder.norms.0
+   类型: GroupNorm
+   参数: 512
+
+776. segmentation_head.pixel_decoder.norms.1
+   类型: GroupNorm
+   参数: 512
+
+777. segmentation_head.pixel_decoder.norms.2
+   类型: GroupNorm
+   参数: 512
+
+====================================================================================================
+【Prediction Heads】 - 11 层
+====================================================================================================
+
+778. geometry_encoder.label_embed
+   类型: Embedding
+   参数: 512
+
+779. geometry_encoder.cls_embed
+   类型: Embedding
+   参数: 256
+
+780. segmentation_head.mask_predictor.mask_embed.layers.0
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+781. segmentation_head.mask_predictor.mask_embed.layers.1
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+782. segmentation_head.mask_predictor.mask_embed.layers.2
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+783. segmentation_head.mask_predictor.mask_embed.drop
+   类型: Identity
+
+784. segmentation_head.mask_predictor.mask_embed.out_norm
+   类型: Identity
+
+785. segmentation_head.cross_attend_prompt.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+786. segmentation_head.cross_attn_norm
+   类型: LayerNorm
+   参数: 512
+
+787. segmentation_head.semantic_seg_head
+   类型: Conv2d
+   参数: 257
+   配置: out: 1
+
+788. segmentation_head.instance_seg_head
+   类型: Conv2d
+   参数: 65,792
+   配置: out: 256
+
+====================================================================================================
+【Normalization】 - 31 层
+====================================================================================================
+
+789. geometry_encoder.norm
+   类型: LayerNorm
+   参数: 512
+
+790. geometry_encoder.img_pre_norm
+   类型: LayerNorm
+   参数: 512
+
+791. geometry_encoder.encode.0.norm1
+   类型: LayerNorm
+   参数: 512
+
+792. geometry_encoder.encode.0.norm2
+   类型: LayerNorm
+   参数: 512
+
+793. geometry_encoder.encode.0.norm3
+   类型: LayerNorm
+   参数: 512
+
+794. geometry_encoder.encode.1.norm1
+   类型: LayerNorm
+   参数: 512
+
+795. geometry_encoder.encode.1.norm2
+   类型: LayerNorm
+   参数: 512
+
+796. geometry_encoder.encode.1.norm3
+   类型: LayerNorm
+   参数: 512
+
+797. geometry_encoder.encode.2.norm1
+   类型: LayerNorm
+   参数: 512
+
+798. geometry_encoder.encode.2.norm2
+   类型: LayerNorm
+   参数: 512
+
+799. geometry_encoder.encode.2.norm3
+   类型: LayerNorm
+   参数: 512
+
+800. geometry_encoder.encode_norm
+   类型: LayerNorm
+   参数: 512
+
+801. transformer.encoder.layers.0.norm1
+   类型: LayerNorm
+   参数: 512
+
+802. transformer.encoder.layers.0.norm2
+   类型: LayerNorm
+   参数: 512
+
+803. transformer.encoder.layers.0.norm3
+   类型: LayerNorm
+   参数: 512
+
+804. transformer.encoder.layers.1.norm1
+   类型: LayerNorm
+   参数: 512
+
+805. transformer.encoder.layers.1.norm2
+   类型: LayerNorm
+   参数: 512
+
+806. transformer.encoder.layers.1.norm3
+   类型: LayerNorm
+   参数: 512
+
+807. transformer.encoder.layers.2.norm1
+   类型: LayerNorm
+   参数: 512
+
+808. transformer.encoder.layers.2.norm2
+   类型: LayerNorm
+   参数: 512
+
+809. transformer.encoder.layers.2.norm3
+   类型: LayerNorm
+   参数: 512
+
+810. transformer.encoder.layers.3.norm1
+   类型: LayerNorm
+   参数: 512
+
+811. transformer.encoder.layers.3.norm2
+   类型: LayerNorm
+   参数: 512
+
+812. transformer.encoder.layers.3.norm3
+   类型: LayerNorm
+   参数: 512
+
+813. transformer.encoder.layers.4.norm1
+   类型: LayerNorm
+   参数: 512
+
+814. transformer.encoder.layers.4.norm2
+   类型: LayerNorm
+   参数: 512
+
+815. transformer.encoder.layers.4.norm3
+   类型: LayerNorm
+   参数: 512
+
+816. transformer.encoder.layers.5.norm1
+   类型: LayerNorm
+   参数: 512
+
+817. transformer.encoder.layers.5.norm2
+   类型: LayerNorm
+   参数: 512
+
+818. transformer.encoder.layers.5.norm3
+   类型: LayerNorm
+   参数: 512
+
+819. dot_prod_scoring.prompt_mlp.out_norm
+   类型: LayerNorm
+   参数: 512
+
+====================================================================================================
+【Other】 - 85 层
+====================================================================================================
+
+820. geometry_encoder.pos_enc
+   类型: PositionEmbeddingSine
+
+821. geometry_encoder.points_direct_project
+   类型: Linear
+   参数: 768
+   配置: out: 256
+
+822. geometry_encoder.points_pool_project
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+823. geometry_encoder.points_pos_enc_project
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+824. geometry_encoder.boxes_direct_project
+   类型: Linear
+   参数: 1,280
+   配置: out: 256
+
+825. geometry_encoder.boxes_pool_project
+   类型: Conv2d
+   参数: 3,211,520
+   配置: out: 256
+
+826. geometry_encoder.boxes_pos_enc_project
+   类型: Linear
+   参数: 66,304
+   配置: out: 256
+
+827. geometry_encoder.final_proj
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+828. geometry_encoder.encode.0.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+829. geometry_encoder.encode.0.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+830. geometry_encoder.encode.0.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+831. geometry_encoder.encode.0.dropout
+   类型: Dropout
+
+832. geometry_encoder.encode.0.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+833. geometry_encoder.encode.0.dropout1
+   类型: Dropout
+
+834. geometry_encoder.encode.0.dropout2
+   类型: Dropout
+
+835. geometry_encoder.encode.0.dropout3
+   类型: Dropout
+
+836. geometry_encoder.encode.1.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+837. geometry_encoder.encode.1.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+838. geometry_encoder.encode.1.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+839. geometry_encoder.encode.1.dropout
+   类型: Dropout
+
+840. geometry_encoder.encode.1.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+841. geometry_encoder.encode.1.dropout1
+   类型: Dropout
+
+842. geometry_encoder.encode.1.dropout2
+   类型: Dropout
+
+843. geometry_encoder.encode.1.dropout3
+   类型: Dropout
+
+844. geometry_encoder.encode.2.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+845. geometry_encoder.encode.2.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+846. geometry_encoder.encode.2.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+847. geometry_encoder.encode.2.dropout
+   类型: Dropout
+
+848. geometry_encoder.encode.2.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+849. geometry_encoder.encode.2.dropout1
+   类型: Dropout
+
+850. geometry_encoder.encode.2.dropout2
+   类型: Dropout
+
+851. geometry_encoder.encode.2.dropout3
+   类型: Dropout
+
+852. transformer.encoder.layers.0.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+853. transformer.encoder.layers.0.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+854. transformer.encoder.layers.0.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+855. transformer.encoder.layers.0.dropout
+   类型: Dropout
+
+856. transformer.encoder.layers.0.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+857. transformer.encoder.layers.0.dropout1
+   类型: Dropout
+
+858. transformer.encoder.layers.0.dropout2
+   类型: Dropout
+
+859. transformer.encoder.layers.0.dropout3
+   类型: Dropout
+
+860. transformer.encoder.layers.1.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+861. transformer.encoder.layers.1.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+862. transformer.encoder.layers.1.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+863. transformer.encoder.layers.1.dropout
+   类型: Dropout
+
+864. transformer.encoder.layers.1.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+865. transformer.encoder.layers.1.dropout1
+   类型: Dropout
+
+866. transformer.encoder.layers.1.dropout2
+   类型: Dropout
+
+867. transformer.encoder.layers.1.dropout3
+   类型: Dropout
+
+868. transformer.encoder.layers.2.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+869. transformer.encoder.layers.2.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+870. transformer.encoder.layers.2.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+871. transformer.encoder.layers.2.dropout
+   类型: Dropout
+
+872. transformer.encoder.layers.2.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+873. transformer.encoder.layers.2.dropout1
+   类型: Dropout
+
+874. transformer.encoder.layers.2.dropout2
+   类型: Dropout
+
+875. transformer.encoder.layers.2.dropout3
+   类型: Dropout
+
+876. transformer.encoder.layers.3.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+877. transformer.encoder.layers.3.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+878. transformer.encoder.layers.3.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+879. transformer.encoder.layers.3.dropout
+   类型: Dropout
+
+880. transformer.encoder.layers.3.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+881. transformer.encoder.layers.3.dropout1
+   类型: Dropout
+
+882. transformer.encoder.layers.3.dropout2
+   类型: Dropout
+
+883. transformer.encoder.layers.3.dropout3
+   类型: Dropout
+
+884. transformer.encoder.layers.4.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+885. transformer.encoder.layers.4.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+886. transformer.encoder.layers.4.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+887. transformer.encoder.layers.4.dropout
+   类型: Dropout
+
+888. transformer.encoder.layers.4.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+889. transformer.encoder.layers.4.dropout1
+   类型: Dropout
+
+890. transformer.encoder.layers.4.dropout2
+   类型: Dropout
+
+891. transformer.encoder.layers.4.dropout3
+   类型: Dropout
+
+892. transformer.encoder.layers.5.self_attn.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+893. transformer.encoder.layers.5.cross_attn_image.out_proj
+   类型: NonDynamicallyQuantizableLinear
+   参数: 65,792
+   配置: out: 256
+
+894. transformer.encoder.layers.5.linear1
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+895. transformer.encoder.layers.5.dropout
+   类型: Dropout
+
+896. transformer.encoder.layers.5.linear2
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+897. transformer.encoder.layers.5.dropout1
+   类型: Dropout
+
+898. transformer.encoder.layers.5.dropout2
+   类型: Dropout
+
+899. transformer.encoder.layers.5.dropout3
+   类型: Dropout
+
+900. dot_prod_scoring.prompt_mlp.layers.0
+   类型: Linear
+   参数: 526,336
+   配置: out: 2048
+
+901. dot_prod_scoring.prompt_mlp.layers.1
+   类型: Linear
+   参数: 524,544
+   配置: out: 256
+
+902. dot_prod_scoring.prompt_mlp.drop
+   类型: Dropout
+
+903. dot_prod_scoring.prompt_proj
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+904. dot_prod_scoring.hs_proj
+   类型: Linear
+   参数: 65,792
+   配置: out: 256
+
+====================================================================================================
+总计: 904 个可添加 Hook 的层
+====================================================================================================

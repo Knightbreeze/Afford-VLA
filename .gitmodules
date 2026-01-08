@@ -1,9 +1,0 @@
-[submodule "third_party/aloha"]
-	path = third_party/aloha
-	url = https://github.com/Physical-Intelligence/aloha.git
-[submodule "third_party/libero"]
-	path = third_party/libero
-	url = https://github.com/Lifelong-Robot-Learning/LIBERO.git
-[submodule "src/sam3"]
-	path = src/sam3
-	url = https://github.com/facebookresearch/sam3.git
