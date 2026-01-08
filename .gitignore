@@ -5,6 +5,8 @@ third_party/
 src/sam3/assets/
 src/sam3/input/
 src/sam3/output/
+src/sam3/examples/
+tool/
 
 # Data directories.
 assets/
